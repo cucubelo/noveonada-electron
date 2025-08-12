@@ -1,10 +1,126 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import SportsEvents from '../components/SportsEvents.astro';
+import SportsEventsComponent from '../components/SportsEvents.astro';
+import ChannelsComponent from '../components/Channels.astro';
 ---
 
-<Layout title="Sports Events - Live Streaming">
-  <main>
-    <SportsEvents />
-  </main>
+<Layout title="NO VEO NADA - Streaming Deportivo">
+  <!-- Navegación de pestañas -->
+  <div class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50 sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="font-['Orbitron'] text-3xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+          NO VEO NADA
+        </h1>
+        <div class="text-sm text-gray-400">
+          🔴 EN VIVO • HD Quality
+        </div>
+      </div>
+      
+      <!-- Pestañas -->
+      <div class="flex space-x-4 justify-center">
+        <button 
+          id="eventsTab"
+          class="tab-btn active px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+        >
+          <span class="text-xl">⚽</span>
+          <span>Eventos Deportivos</span>
+        </button>
+        <button 
+          id="channelsTab"
+          class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+        >
+          <span class="text-xl">📺</span>
+          <span>Canales 24/7</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenido de las pestañas -->
+  <div id="eventsContent" class="tab-content">
+    <SportsEventsComponent />
+  </div>
+  
+  <div id="channelsContent" class="tab-content hidden">
+    <ChannelsComponent />
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const eventsTab = document.getElementById('eventsTab');
+      const channelsTab = document.getElementById('channelsTab');
+      const eventsContent = document.getElementById('eventsContent');
+      const channelsContent = document.getElementById('channelsContent');
+      
+      function switchTab(activeTab: string) {
+        // Reset tabs
+        [eventsTab, channelsTab].forEach(tab => {
+          tab?.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'from-purple-500', 'to-pink-600', 'text-white');
+          tab?.classList.add('bg-gray-700/50', 'text-gray-300');
+        });
+        
+        // Hide all content
+        [eventsContent, channelsContent].forEach(content => {
+          content?.classList.add('hidden');
+        });
+        
+        // Show active tab and content
+        if (activeTab === 'events') {
+          eventsTab?.classList.remove('bg-gray-700/50', 'text-gray-300');
+          eventsTab?.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+          eventsContent?.classList.remove('hidden');
+        } else {
+          channelsTab?.classList.remove('bg-gray-700/50', 'text-gray-300');
+          channelsTab?.classList.add('active', 'bg-gradient-to-r', 'from-purple-500', 'to-pink-600', 'text-white');
+          channelsContent?.classList.remove('hidden');
+        }
+      }
+      
+      eventsTab?.addEventListener('click', () => switchTab('events'));
+      channelsTab?.addEventListener('click', () => switchTab('channels'));
+      
+      // Atajos de teclado
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === '1') {
+          e.preventDefault();
+          switchTab('events');
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === '2') {
+          e.preventDefault();
+          switchTab('channels');
+        }
+      });
+    });
+  </script>
 </Layout>
+
+## Análisis de tu aplicación:
+
+### Características actuales:
+- ✅ Solo 2 secciones principales (Eventos y Canales)
+- ✅ Navegación frecuente entre secciones
+- ✅ Filtros importantes que los usuarios quieren mantener
+- ✅ Contenido dinámico que se actualiza
+- ✅ Ya tenías un sistema de pestañas funcionando
+
+## ¿Por qué SPA es la mejor opción?
+
+### 🚀 **Ventajas para tu caso:**
+1. **Experiencia fluida**: Sin recargas de página
+2. **Estado persistente**: Los filtros se mantienen automáticamente
+3. **Navegación rápida**: Cambio instantáneo entre secciones
+4. **Menos código**: No necesitas localStorage ni URL params
+5. **Mejor UX**: Como una app nativa
+6. **Optimización**: Solo carga el contenido una vez
+
+### 📱 **Perfecto para tu app porque:**
+- Es una aplicación de **contenido multimedia** (streams)
+- Los usuarios **alternan frecuentemente** entre eventos y canales
+- Los **filtros son críticos** para encontrar contenido
+- Es una **interfaz simple** con solo 2 secciones principales
+
+## Implementación recomendada:
+
+### 1. Layout principal con navegación por pestañas:
+

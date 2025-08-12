@@ -1,7 +1,9 @@
 ---
 import { getEventsByDays } from '../utils/events.js';
 
+
 const { eventsByDay, categories } = await getEventsByDays();
+
 
 // Función para limpiar el nombre del día
 function cleanDayName(dayName: string): string {
@@ -48,7 +50,7 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     <div class="flex items-center justify-between mb-6">
       <div class="flex-1"></div>
       <h1 class="font-['Orbitron'] text-6xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
-        NO VEO NADA
+        EVENTOS DEPORTIVOS
       </h1>
       <div class="flex-1 flex justify-end">
         <!-- Toggle para modo multi-reproductor -->
@@ -79,7 +81,7 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
           <div class="flex items-center space-x-2 bg-gray-800/50 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700/50">
             <span class="text-xs text-gray-400">Único</span>
             <label class="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" id="multiPlayerToggle" class="sr-only peer" checked>
+              <input type="checkbox" id="multiPlayerToggle" class="sr-only peer">
               <div class="w-8 h-4 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-600 rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
             </label>
             <span class="text-xs text-gray-400">Multi</span>
@@ -433,6 +435,8 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     </div>
   </div>
 
+
+
   <!-- Eventos separados por días -->
   {Object.entries(eventsByDay).map(([dayName, dayEvents]) => {
     const cleanedDayName = cleanDayName(dayName);
@@ -665,20 +669,57 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     
     checkElectronAPI();
     
-    // Funcionalidad de búsqueda y filtros
-    const searchInput = document.getElementById('searchInput');
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const eventCards = document.querySelectorAll('.event-card');
-    const daySections = document.querySelectorAll('.day-section');
-    const resultsCount = document.getElementById('resultsCount');
-    const totalEvents = document.getElementById('totalEvents');
-    const noResults = document.getElementById('noResults');
-    const timezoneSelect = document.getElementById('timezoneSelect');
+    // Inicialización mejorada con retry
+    let searchInitialized = false;
+    
+    function initializeSearch() {
+      if (searchInitialized) return;
+      
+      const searchInput = document.getElementById('searchInput');
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      const eventCards = document.querySelectorAll('.event-card');
+      const daySections = document.querySelectorAll('.day-section');
+      const resultsCount = document.getElementById('resultsCount');
+      const totalEvents = document.getElementById('totalEvents');
+      const noResults = document.getElementById('noResults');
+      const timezoneSelect = document.getElementById('timezoneSelect');
+      
+      console.log('🔍 Inicializando búsqueda de eventos...');
+      console.log('📝 Input encontrado:', !!searchInput);
+      console.log('🎯 Eventos encontrados:', eventCards.length);
+      console.log('📅 Secciones de día encontradas:', daySections.length);
+      
+      if (!searchInput || eventCards.length === 0) {
+        console.log('⏳ Elementos no listos, reintentando en 500ms...');
+        setTimeout(initializeSearch, 500);
+        return;
+      }
+      
+      searchInitialized = true;
+      console.log('✅ Búsqueda de eventos inicializada correctamente');
+      
+      console.log('🔧 Elementos encontrados:', {
+        searchInput: !!searchInput,
+        filterBtns: filterBtns.length,
+        eventCards: eventCards.length,
+        daySections: daySections.length
+      });
+  
+  // También inicializar cuando se carga dinámicamente
+  if (document.readyState === 'complete') {
+    setTimeout(() => {
+      if (!searchInitialized) {
+        initializeSearch();
+      }
+    }, 100);
+  }
     
     let currentFilter = 'all';
     let currentSearch = '';
     let currentDay = 'all';
     let currentTimezone = 'Europe/London';
+    
+    console.log('🎯 Estado inicial de filtros:', { currentFilter, currentSearch, currentDay, currentTimezone });
 
     // Detectar zona horaria del usuario automáticamente
     const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -786,32 +827,41 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
       });
     }
 
-    // Función para filtrar eventos
+    // Función para filtrar eventos - CORREGIDA
     function filterEvents() {
+      console.log('🔍 Iniciando filtrado...', { currentSearch, currentFilter, currentDay });
+      
       let visibleCount = 0;
       let visibleDays = 0;
       
-      daySections.forEach(daySection => {
+      // Re-obtener elementos para asegurar que están actualizados
+      const currentDaySections = document.querySelectorAll('.day-section');
+      
+      currentDaySections.forEach(daySection => {
         if (daySection && daySection.nodeType === Node.ELEMENT_NODE) {
           const dayName = daySection.getAttribute('data-day') || '';
           const dayCards = daySection.querySelectorAll('.event-card');
           let dayVisibleCount = 0;
           
+          console.log(`📅 Procesando día: ${dayName}, tarjetas: ${dayCards.length}`);
+          
           // Verificar si el día debe mostrarse
           const dayMatches = currentDay === 'all' || dayName === currentDay;
           
           if (dayMatches) {
-            dayCards.forEach(card => {
+            dayCards.forEach((card, index) => {
               if (card && card.nodeType === Node.ELEMENT_NODE) {
                 const category = card.getAttribute('data-category') || '';
-                const title = card.getAttribute('data-title') || '';
+                const title = (card.getAttribute('data-title') || '').toLowerCase(); // ✅ CORREGIDO
                 const time = card.getAttribute('data-time') || '';
                 
                 const matchesFilter = currentFilter === 'all' || category === currentFilter;
                 const matchesSearch = currentSearch === '' || 
-                  title.includes(currentSearch.toLowerCase()) || 
-                  time.includes(currentSearch) ||
+                  title.includes(currentSearch.toLowerCase()) || // ✅ CORREGIDO
+                  time.toLowerCase().includes(currentSearch.toLowerCase()) || // ✅ MEJORADO
                   category.toLowerCase().includes(currentSearch.toLowerCase());
+                
+                console.log(`🎯 Evento ${index + 1}: "${title}" - Filtro: ${matchesFilter}, Búsqueda: ${matchesSearch}`);
                 
                 if (matchesFilter && matchesSearch) {
                   card.style.display = 'block';
@@ -841,11 +891,16 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
         }
       });
       
+      console.log(`📊 Resultados: ${visibleCount} eventos visibles, ${visibleDays} días visibles`);
+      
       // Actualizar contador
+      const resultsCount = document.getElementById('resultsCount');
+      const totalEvents = document.getElementById('totalEvents');
       if (resultsCount) resultsCount.textContent = visibleCount.toString();
       if (totalEvents) totalEvents.textContent = visibleCount.toString();
       
       // Mostrar/ocultar mensaje de no resultados
+      const noResults = document.getElementById('noResults');
       if (visibleCount === 0) {
         if (noResults) noResults.classList.remove('hidden');
       } else {
@@ -853,28 +908,33 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
       }
     }
 
-    // Event listener para búsqueda
+    // Event listener para búsqueda - MEJORADO
     if (searchInput) {
       const clearSearchBtn = document.getElementById('clearSearchBtn');
       
-      searchInput.addEventListener('input', (e) => {
-        if (e.target && e.target.value !== undefined) {
-          currentSearch = e.target.value;
-          
-          // Mostrar/ocultar botón de limpiar
-          if (clearSearchBtn) {
-            if (currentSearch.length > 0) {
-              clearSearchBtn.style.opacity = '1';
-              clearSearchBtn.style.pointerEvents = 'auto';
-            } else {
-              clearSearchBtn.style.opacity = '0';
-              clearSearchBtn.style.pointerEvents = 'none';
-            }
+      // Función de búsqueda unificada
+      function handleSearch() {
+        currentSearch = searchInput.value.trim();
+        console.log('🔍 Búsqueda actualizada:', currentSearch);
+        
+        // Mostrar/ocultar botón de limpiar
+        if (clearSearchBtn) {
+          if (currentSearch.length > 0) {
+            clearSearchBtn.style.opacity = '1';
+            clearSearchBtn.style.pointerEvents = 'auto';
+          } else {
+            clearSearchBtn.style.opacity = '0';
+            clearSearchBtn.style.pointerEvents = 'none';
           }
-          
-          filterEvents();
         }
-      });
+        
+        filterEvents();
+      }
+      
+      // Múltiples eventos para mayor compatibilidad
+      searchInput.addEventListener('input', handleSearch);
+      searchInput.addEventListener('keyup', handleSearch);
+      searchInput.addEventListener('change', handleSearch);
       
       // Event listener para el botón de limpiar
       if (clearSearchBtn) {
@@ -887,6 +947,8 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
           searchInput.focus();
         });
       }
+    } else {
+      console.error('❌ No se encontró el input de búsqueda con ID "searchInput"');
     }
 
     // Event listeners para filtros de día
@@ -1068,16 +1130,25 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     // Variable para prevenir múltiples clics
     let isProcessingClick = false;
     
+    // Variable para prevenir múltiples inicializaciones del toggle
+    let playerModeInitialized = false;
+    
     // Inicializar el toggle
     function initializePlayerModeToggle() {
+      // Prevenir múltiples inicializaciones
+      if (playerModeInitialized) {
+        console.log('Toggle ya inicializado, omitiendo...');
+        return;
+      }
+      
       const toggle = document.getElementById('multiPlayerToggle');
       if (toggle) {
-        // Cargar preferencia guardada
+        // Cargar preferencia guardada o usar valor por defecto (true = multi)
         const savedMode = localStorage.getItem('playerMode');
-        if (savedMode !== null) {
-          isMultiPlayerMode = savedMode === 'multi';
-          toggle.checked = isMultiPlayerMode;
-        }
+        isMultiPlayerMode = savedMode !== null ? savedMode === 'multi' : true;
+        
+        // Establecer el estado inicial sin animación
+        toggle.checked = isMultiPlayerMode;
         
         // Event listener para cambios
         toggle.addEventListener('change', (e) => {
@@ -1089,6 +1160,10 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
           // Mostrar notificación visual
           showModeNotification(isMultiPlayerMode);
         });
+        
+        // Marcar como inicializado
+        playerModeInitialized = true;
+        console.log('✅ Toggle inicializado en modo:', isMultiPlayerMode ? 'Multi' : 'Único');
       }
     }
     
@@ -1251,23 +1326,112 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
       }
     }
     
-    // Inicializar todo
-    initializePlayerModeToggle();
-    addChannelListeners();
+      // Inicializar todo dentro de initializeSearch
+      initializePlayerModeToggle();
+      addChannelListeners();
+      initializeChannels();
+      
+      // Mostrar la primera categoría de canales por defecto
+      const firstCategoryBtn = document.querySelector('.channel-category-btn[data-category="Deportes"]');
+      if (firstCategoryBtn) {
+        firstCategoryBtn.click();
+      }
+    }
     
-    // Modificar la función filterEvents para evitar múltiples listeners
-    const originalFilterEvents = filterEvents;
-    filterEvents = function() {
-      originalFilterEvents();
-      // Solo re-agregar listeners si hay nuevos elementos
-      setTimeout(() => {
-        const channelBtns = document.querySelectorAll('.channel-btn:not([data-listener-added])');
-        if (channelBtns.length > 0) {
-          addChannelListeners();
-        }
-      }, 100);
-    };
+    // Inicialización principal
+    setTimeout(initializeSearch, 100);
+    
+    // También inicializar cuando se carga dinámicamente
+    if (document.readyState === 'complete') {
+      setTimeout(initializeSearch, 100);
+    }
+    
+      // Modificar la función filterEvents para evitar múltiples listeners
+      const originalFilterEvents = filterEvents;
+      filterEvents = function() {
+        originalFilterEvents();
+        // Solo re-agregar listeners si hay nuevos elementos
+        setTimeout(() => {
+          const channelBtns = document.querySelectorAll('.channel-btn:not([data-listener-added])');
+          if (channelBtns.length > 0) {
+            addChannelListeners();
+          }
+        }, 100);
+      };
 
+    // Funcionalidad para canales 24/7
+    function initializeChannels() {
+      // Búsqueda de canales
+      const channelSearchInput = document.getElementById('channelSearchInput');
+      const clearChannelSearchBtn = document.getElementById('clearChannelSearchBtn');
+      
+      if (channelSearchInput && clearChannelSearchBtn) {
+        channelSearchInput.addEventListener('input', function() {
+          const searchTerm = this.value.toLowerCase();
+          clearChannelSearchBtn.style.opacity = searchTerm ? '1' : '0';
+          clearChannelSearchBtn.style.pointerEvents = searchTerm ? 'auto' : 'none';
+          
+          filterChannels(searchTerm);
+        });
+        
+        clearChannelSearchBtn.addEventListener('click', function() {
+          channelSearchInput.value = '';
+          this.style.opacity = '0';
+          this.style.pointerEvents = 'none';
+          filterChannels('');
+        });
+      }
+      
+      // Filtros por categoría de canales
+      const categoryBtns = document.querySelectorAll('.channel-category-btn');
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const category = this.dataset.category;
+          
+          // Actualizar botones activos
+          categoryBtns.forEach(b => b.classList.remove('active', 'bg-gradient-to-r', 'from-purple-500', 'to-pink-600'));
+          categoryBtns.forEach(b => b.classList.add('bg-gray-700/50', 'hover:bg-gray-600/50', 'border', 'border-gray-600/30'));
+          
+          this.classList.add('active', 'bg-gradient-to-r', 'from-purple-500', 'to-pink-600');
+          this.classList.remove('bg-gray-700/50', 'hover:bg-gray-600/50', 'border', 'border-gray-600/30');
+          
+          // Mostrar/ocultar secciones de canales
+          const sections = document.querySelectorAll('.channel-category-section');
+          sections.forEach(section => {
+            section.style.display = 'none';
+          });
+          
+          const targetSection = document.querySelector(`[data-category="${category}"]`);
+          if (targetSection) {
+            targetSection.style.display = 'block';
+          }
+        });
+      });
+      
+      // Click en canales
+      const channelCards = document.querySelectorAll('.channel-card');
+      channelCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const channelId = this.dataset.channelId;
+          const channelName = this.dataset.channelName;
+          
+          console.log('Abriendo canal 24/7:', channelName, 'ID:', channelId);
+          openChannelWindow(channelId, channelName);
+        });
+      });
+    }
+    
+    function filterChannels(searchTerm) {
+      const channelCards = document.querySelectorAll('.channel-card');
+      
+      channelCards.forEach(card => {
+        const channelName = card.dataset.channelName.toLowerCase();
+        const shouldShow = channelName.includes(searchTerm);
+        
+        card.style.display = shouldShow ? 'block' : 'none';
+      });
+    }
+    
     // Funcionalidad para filtros rápidos
     const quickFilters = document.querySelectorAll('.quick-filter');
     quickFilters.forEach(filter => {

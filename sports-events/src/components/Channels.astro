@@ -1,0 +1,299 @@
+---
+import { get247Channels } from '../utils/channels.js';
+
+const { channels, totalChannels } = await get247Channels();
+
+// Definir interface para los canales
+interface Channel {
+  id: string;
+  name: string;
+}
+
+const typedChannels = channels as Channel[];
+---
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Header futurístico para canales -->
+  <div class="text-center mb-12">
+    <h1 class="font-['Orbitron'] text-6xl font-black bg-gradient-to-r from-purple-400 via-pink-500 to-red-400 bg-clip-text text-transparent mb-4">
+      CANALES 24/7
+    </h1>
+    <div class="w-32 h-1 bg-gradient-to-r from-purple-500 to-pink-500 mx-auto mb-6 glow-purple"></div>
+    <p class="text-xl text-gray-300 font-light">
+      Transmisión continua • {totalChannels} canales disponibles • Calidad HD
+    </p>
+  </div>
+
+  <!-- Buscador de canales -->
+  <div class="mb-8">
+    <div class="max-w-2xl mx-auto">
+      <label class="block text-center text-gray-400 text-sm mb-2">🔍 Buscar canales:</label>
+      <div class="relative">
+        <input 
+          type="text" 
+          id="channelSearchInput"
+          placeholder="Buscar canales por nombre..."
+          class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+        >
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+          🔍
+        </div>
+        <button 
+          id="clearChannelSearchBtn"
+          class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200 opacity-0 pointer-events-none"
+          title="Limpiar búsqueda"
+        >
+          ❌
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contador de resultados -->
+  <div class="flex justify-center items-center mb-6">
+    <div class="text-gray-400 text-sm">
+      <span id="channelCount">{totalChannels}</span> canales disponibles
+    </div>
+  </div>
+
+  <!-- Grid de canales -->
+  <div id="channelsContainer">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      {typedChannels.map((channel: Channel) => (
+        <div 
+          class="channel-card bg-gradient-to-br from-gray-800/80 to-gray-900/80 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6 hover:border-purple-500/50 hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer group"
+          data-channel-id={channel.id}
+          data-channel-name={channel.name}
+        >
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold text-lg glow-purple">
+                📺
+              </div>
+              <div>
+                <h3 class="font-semibold text-white group-hover:text-purple-300 transition-colors duration-200">
+                  {channel.name}
+                </h3>
+                <p class="text-xs text-gray-400">
+                  Canal 24/7
+                </p>
+              </div>
+            </div>
+            <div class="text-green-400 text-sm font-medium">
+              🔴 EN VIVO
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="text-xs text-gray-500">
+              ID: {channel.id}
+            </div>
+            <div class="bg-purple-500/20 text-purple-300 px-3 py-1 rounded-full text-xs font-medium">
+              ▶️ Ver ahora
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando Channels...');
+    
+    // Función para inicializar búsqueda con retry mejorado
+    function initializeChannelSearch() {
+      const searchInput = document.getElementById('channelSearchInput') as HTMLInputElement;
+      const clearSearchBtn = document.getElementById('clearChannelSearchBtn') as HTMLButtonElement;
+      const allChannels = document.querySelectorAll('.channel-card');
+      
+      console.log('🔍 Elementos encontrados:', {
+        searchInput: !!searchInput,
+        clearSearchBtn: !!clearSearchBtn,
+        channelsCount: allChannels.length
+      });
+      
+      if (!searchInput || allChannels.length === 0) {
+        console.log('⏳ Reintentando inicialización en 200ms...');
+        setTimeout(initializeChannelSearch, 200);
+        return;
+      }
+      
+      console.log('✅ Inicializando búsqueda de canales');
+      
+      // Función de filtrado
+      function filterChannels() {
+        if (!searchInput) return;
+        
+        const searchTerm = searchInput.value.trim().toLowerCase();
+        const channels = document.querySelectorAll('.channel-card');
+        let visibleCount = 0;
+        
+        console.log('🔍 Filtrando con término:', searchTerm);
+        
+        channels.forEach((card) => {
+          const htmlCard = card as HTMLElement;
+          const channelName = htmlCard.getAttribute('data-channel-name') || '';
+          const isVisible = searchTerm === '' || channelName.toLowerCase().includes(searchTerm);
+          
+          htmlCard.style.display = isVisible ? 'block' : 'none';
+          if (isVisible) visibleCount++;
+        });
+        
+        // Actualizar contador
+        const channelCount = document.getElementById('channelCount');
+        if (channelCount) {
+          channelCount.textContent = visibleCount.toString();
+        }
+        
+        // Mostrar/ocultar botón limpiar
+        if (clearSearchBtn) {
+          clearSearchBtn.style.opacity = searchTerm ? '1' : '0';
+          clearSearchBtn.style.pointerEvents = searchTerm ? 'auto' : 'none';
+        }
+        
+        console.log('📊 Canales visibles:', visibleCount);
+      }
+      
+      // Event listeners
+      searchInput.addEventListener('input', filterChannels);
+      searchInput.addEventListener('keyup', filterChannels);
+      
+      if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+          if (searchInput) {
+            searchInput.value = '';
+            filterChannels();
+            searchInput.focus();
+          }
+        });
+      }
+      
+      console.log('✅ Búsqueda de canales inicializada correctamente');
+    }
+    
+    // Inicializar búsqueda
+    initializeChannelSearch();
+    
+    // Inicializar clicks en canales
+    function initializeChannelClicks() {
+      const channelCards = document.querySelectorAll('.channel-card');
+      
+      channelCards.forEach(card => {
+        card.addEventListener('click', function(this: HTMLElement) {
+          const channelId = this.getAttribute('data-channel-id');
+          const channelName = this.getAttribute('data-channel-name');
+          
+          if (channelId && channelName) {
+            openChannelWindow(channelId, channelName);
+          }
+        });
+      });
+    }
+    
+    initializeChannelClicks();
+    
+    // Función para abrir ventana de canal - CORREGIDA PARA USAR ELECTRON
+    function openChannelWindow(channelId: string, channelName: string) {
+      try {
+        console.log('🎬 Abriendo canal 24/7 con bloqueo:', channelName, 'ID:', channelId);
+        
+        // Verificar si electronAPI está disponible
+        if (typeof window !== 'undefined' && (window as any).electronAPI) {
+          // Usar el sistema seguro de Electron (igual que eventos deportivos)
+          (window as any).electronAPI.openNewWindow(channelId, { title: channelName })
+            .then((result: any) => {
+              if (result && result.success) {
+                console.log('✅ Canal 24/7 abierto con bloqueo exitosamente:', result);
+              } else {
+                console.error('❌ Error al abrir canal 24/7:', result);
+              }
+            })
+            .catch((error: any) => {
+              console.error('❌ Error abriendo canal 24/7:', error);
+            });
+        } else {
+          console.error('❌ electronAPI no disponible para canales 24/7');
+        }
+      } catch (error: any) {
+        console.error('❌ Error general abriendo canal 24/7:', error);
+      }
+    }
+  });
+</script>
+
+<style>
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+  
+  .channel-card {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .channel-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.1), transparent);
+    transition: left 0.5s;
+    z-index: 1;
+  }
+  
+  .channel-card:hover::before {
+    left: 100%;
+  }
+  
+  /* Scrollbar personalizado para canales */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #111827;
+    border-radius: 6px;
+    border: 1px solid rgba(55, 65, 81, 0.3);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #8b5cf6, #ec4899);
+    border-radius: 6px;
+    border: 2px solid #111827;
+    box-shadow: inset 0 0 6px rgba(168, 85, 247, 0.3);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #7c3aed, #db2777);
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.6), inset 0 0 6px rgba(168, 85, 247, 0.4);
+  }
+  
+  ::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #6d28d9, #be185d);
+  }
+  
+  ::-webkit-scrollbar-corner {
+    background: #111827;
+  }
+  
+  /* Para Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #8b5cf6 #111827;
+  }
+  
+  /* Mejoras responsivas */
+  @media (max-width: 768px) {
+    .channel-card {
+      transform: none !important;
+    }
+    
+    .channel-card:hover {
+      transform: translateY(-2px) !important;
+    }
+  }
+</style>
