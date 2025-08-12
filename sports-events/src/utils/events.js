@@ -1,8 +1,68 @@
+// Función para obtener la URL del schedule desde el VPS
+async function getScheduleUrl() {
+  try {
+    // Usar variable de entorno o fallback
+    const configApiUrl = import.meta.env.PUBLIC_CONFIG_API_URL || 'https://url.fanstv.info/';
+    
+    console.log('Intentando obtener configuración desde:', configApiUrl); // Debug
+    
+    const configRes = await fetch(configApiUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache'
+      }
+    });
+    
+    if (!configRes.ok) {
+      throw new Error(`Error obteniendo configuración: ${configRes.status}`);
+    }
+    
+    const config = await configRes.json();
+    console.log('Configuración obtenida:', config); // Debug
+    
+    if (!config.schedule_url) {
+      throw new Error('schedule_url no encontrada en la respuesta');
+    }
+    
+    return config.schedule_url;
+  } catch (error) {
+    console.warn('Error obteniendo URL del VPS, usando URL por defecto:', error);
+    // Fallback a la URL original si el VPS no responde
+    return 'https://thedaddy.dad/schedule/schedule-generated.php';
+  }
+}
+
 // Función para obtener eventos por días (compatible con Astro y Electron)
 export async function getEventsByDays() {
   try {
-    // Siempre usar la API real
-    const res = await fetch('https://noveonada.com/proxy/schedule');
+    // Obtener la URL dinámicamente desde el VPS
+    const scheduleUrl = await getScheduleUrl();
+    
+    // Usar la URL obtenida con headers de navegador para evitar CORS
+    const res = await fetch(scheduleUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Cache-Control': 'max-age=0',
+        'Referer': 'https://thedaddy.dad/',
+        'Origin': 'https://thedaddy.dad'
+      }
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+    
     const data = await res.json();
 
     const eventsByDay = {};

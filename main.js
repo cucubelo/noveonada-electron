@@ -5,7 +5,7 @@ import fetch from 'cross-fetch';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import { getTodayEvents } from './today.js';
+import 'dotenv'
 
 // Obtener __dirname en módulos ES
 const __filename = fileURLToPath(import.meta.url);
@@ -100,6 +100,10 @@ async function createStreamWindow(url) {
     streamWin.webContents.executeJavaScript(`
       console.log('Scripts anti-popup cargados');
       
+      // Al inicio del archivo, después de los imports
+      require('dotenv').config();
+      
+      // Luego puedes usar process.env.VITE_CONFIG_API_URL
       // Anula window.open y sus alias COMPLETAMENTE
       window.open = function() {
         console.log('window.open bloqueado');
