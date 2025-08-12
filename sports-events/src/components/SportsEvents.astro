@@ -52,18 +52,37 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
       </h1>
       <div class="flex-1 flex justify-end">
         <!-- Toggle para modo multi-reproductor -->
-        <div class="flex items-center space-x-3 bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
-          <span class="text-sm text-gray-300">Reproductor único</span>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input type="checkbox" id="multiPlayerToggle" class="sr-only peer" checked>
-            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
-          </label>
-          <span class="text-sm text-gray-300">Multi-reproductor</span>
-          <div class="flex items-center space-x-1 text-xs text-gray-400">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <span>Múltiples ventanas</span>
+        <div class="flex flex-col items-end space-y-1">
+          <div class="flex items-center space-x-1">
+            <span class="text-xs text-gray-500 font-medium">Modo de reproducción</span>
+            <div class="relative group">
+              <svg class="w-3 h-3 text-gray-400 hover:text-blue-400 cursor-help transition-colors duration-200" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+              </svg>
+              <!-- Tooltip -->
+              <div class="absolute top-full right-0 mt-2 w-64 p-3 bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                <div class="text-xs text-gray-300 space-y-2">
+                  <div>
+                    <span class="text-blue-400 font-medium">📺 Modo Único:</span>
+                    <p class="text-gray-400">Solo una ventana de stream abierta. Al seleccionar un nuevo canal, reemplaza el contenido actual.</p>
+                  </div>
+                  <div>
+                    <span class="text-purple-400 font-medium">🎬 Modo Multi:</span>
+                    <p class="text-gray-400">Múltiples ventanas de stream. Cada canal se abre en una ventana independiente.</p>
+                  </div>
+                </div>
+                <!-- Flecha del tooltip -->
+                <div class="absolute bottom-full right-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-transparent border-b-gray-700/50"></div>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2 bg-gray-800/50 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700/50">
+            <span class="text-xs text-gray-400">Único</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="multiPlayerToggle" class="sr-only peer" checked>
+              <div class="w-8 h-4 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-600 rounded-full peer peer-checked:after:translate-x-4 peer-checked:after:border-white after:content-[''] after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
+            </label>
+            <span class="text-xs text-gray-400">Multi</span>
           </div>
         </div>
       </div>
@@ -283,11 +302,18 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
               type="text" 
               id="searchInput"
               placeholder="Buscar eventos..."
-              class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 pr-12 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
             <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
               🔍
             </div>
+            <button 
+              id="clearSearchBtn"
+              class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200 opacity-0 pointer-events-none"
+              title="Limpiar búsqueda"
+            >
+              ❌
+            </button>
           </div>
         </div>
       </div>
@@ -755,7 +781,7 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
           filtersContent.style.display = 'none';
           filterToggleText.textContent = 'Mostrar';
           filterToggleIcon.textContent = '▼';
-          filterToggleIcon.style.transform = 'rotate(180deg)';
+          filterToggleIcon.style.transform = 'rotate(0deg)';
         }
       });
     }
@@ -829,12 +855,38 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
 
     // Event listener para búsqueda
     if (searchInput) {
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      
       searchInput.addEventListener('input', (e) => {
         if (e.target && e.target.value !== undefined) {
           currentSearch = e.target.value;
+          
+          // Mostrar/ocultar botón de limpiar
+          if (clearSearchBtn) {
+            if (currentSearch.length > 0) {
+              clearSearchBtn.style.opacity = '1';
+              clearSearchBtn.style.pointerEvents = 'auto';
+            } else {
+              clearSearchBtn.style.opacity = '0';
+              clearSearchBtn.style.pointerEvents = 'none';
+            }
+          }
+          
           filterEvents();
         }
       });
+      
+      // Event listener para el botón de limpiar
+      if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', () => {
+          searchInput.value = '';
+          currentSearch = '';
+          clearSearchBtn.style.opacity = '0';
+          clearSearchBtn.style.pointerEvents = 'none';
+          filterEvents();
+          searchInput.focus();
+        });
+      }
     }
 
     // Event listeners para filtros de día
@@ -1302,6 +1354,43 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
   
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(59, 130, 246, 0.7);
+  }
+  
+  /* Scrollbar principal de la página */
+  ::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #111827;
+    border-radius: 6px;
+    border: 1px solid rgba(55, 65, 81, 0.3);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+    border-radius: 6px;
+    border: 2px solid #111827;
+    box-shadow: inset 0 0 6px rgba(59, 130, 246, 0.3);
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #2563eb, #7c3aed);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6), inset 0 0 6px rgba(59, 130, 246, 0.4);
+  }
+  
+  ::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(180deg, #1d4ed8, #6d28d9);
+  }
+  
+  ::-webkit-scrollbar-corner {
+    background: #111827;
+  }
+  
+  /* Para Firefox */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: #3b82f6 #111827;
   }
   
   /* Animaciones mejoradas */
