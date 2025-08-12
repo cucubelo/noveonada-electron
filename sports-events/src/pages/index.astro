@@ -5,34 +5,200 @@ import ChannelsComponent from '../components/Channels.astro';
 ---
 
 <Layout title="NO VEO NADA - Streaming Deportivo">
-  <!-- Navegación de pestañas -->
-  <div class="bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50 sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex items-center justify-between mb-4">
-        <h1 class="font-['Orbitron'] text-3xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
+  <!-- Navegación fija simplificada -->
+  <div class="bg-gray-900/95 backdrop-blur-md border-b border-gray-700/50 sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3">
+      <!-- Header y pestañas en la misma línea -->
+      <div class="flex items-center justify-between">
+        <!-- Logo más grande -->
+        <h1 class="font-['Orbitron'] text-4xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent">
           NO VEO NADA
         </h1>
-        <div class="text-sm text-gray-400">
-          🔴 EN VIVO • HD Quality
+        
+        <!-- Pestañas centradas -->
+        <div class="flex space-x-3">
+          <button 
+            id="eventsTab"
+            class="tab-btn active px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-sm"
+          >
+            <span class="text-base">⚽</span>
+            <span>Eventos</span>
+          </button>
+          <button 
+            id="channelsTab"
+            class="tab-btn px-4 py-2 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50 text-sm"
+          >
+            <span class="text-base">📺</span>
+            <span>Canales 24/7</span>
+          </button>
         </div>
+        
+        <!-- Sistema de usuario -->
+        <div class="flex items-center gap-3">
+          <!-- Botón de usuario (cuando no está logueado) -->
+          <div id="authButtons" class="flex items-center gap-2">
+            <button 
+              id="loginBtn"
+              class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 flex items-center gap-1"
+            >
+              <span>👤</span>
+              <span>Iniciar Sesión</span>
+            </button>
+            <button 
+              id="registerBtn"
+              class="px-3 py-1.5 text-sm border border-gray-600 hover:border-gray-500 text-gray-300 hover:text-white rounded-lg transition-colors duration-200"
+            >
+              Registro
+            </button>
+          </div>
+          
+          <!-- Perfil de usuario (cuando está logueado) -->
+          <div id="userProfile" class="hidden items-center gap-2">
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg">
+              <div class="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
+                U
+              </div>
+              <span id="userName" class="text-sm text-gray-300">Usuario</span>
+              <span id="userPlan" class="text-xs px-2 py-0.5 bg-yellow-600 text-yellow-100 rounded-full">FREE</span>
+            </div>
+            <button 
+              id="userMenuBtn"
+              class="p-1.5 text-gray-400 hover:text-white transition-colors duration-200"
+            >
+              ⚙️
+            </button>
+          </div>
+        </div>
+      
+      </div>
+    </div>
+  </div>
+
+  <!-- Modales para Login y Registro -->
+  <div id="loginModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] hidden items-center justify-center">
+    <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 border border-gray-700">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white">Iniciar Sesión</h2>
+        <button id="closeLoginModal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
       </div>
       
-      <!-- Pestañas -->
-      <div class="flex space-x-4 justify-center">
+      <form id="loginForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+          <input 
+            type="email" 
+            id="loginEmail" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="tu@email.com"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Contraseña</label>
+          <input 
+            type="password" 
+            id="loginPassword" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="••••••••"
+          >
+        </div>
+        
+        <div class="flex items-center justify-between">
+          <label class="flex items-center">
+            <input type="checkbox" class="rounded bg-gray-700 border-gray-600 text-blue-600">
+            <span class="ml-2 text-sm text-gray-300">Recordarme</span>
+          </label>
+          <a href="#" class="text-sm text-blue-400 hover:text-blue-300">¿Olvidaste tu contraseña?</a>
+        </div>
+        
         <button 
-          id="eventsTab"
-          class="tab-btn active px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white"
+          type="submit"
+          class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 font-semibold"
         >
-          <span class="text-xl">⚽</span>
-          <span>Eventos Deportivos</span>
+          Iniciar Sesión
         </button>
+      </form>
+      
+      <div class="mt-4 text-center">
+        <span class="text-gray-400">¿No tienes cuenta? </span>
+        <button id="switchToRegister" class="text-blue-400 hover:text-blue-300 font-semibold">Regístrate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Registro -->
+  <div id="registerModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] hidden items-center justify-center">
+    <div class="bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4 border border-gray-700">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold text-white">Crear Cuenta</h2>
+        <button id="closeRegisterModal" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+      </div>
+      
+      <form id="registerForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Nombre completo</label>
+          <input 
+            type="text" 
+            id="registerName" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="Tu nombre completo"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+          <input 
+            type="email" 
+            id="registerEmail" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="tu@email.com"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Contraseña</label>
+          <input 
+            type="password" 
+            id="registerPassword" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="••••••••"
+          >
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-300 mb-1">Confirmar contraseña</label>
+          <input 
+            type="password" 
+            id="registerConfirmPassword" 
+            required
+            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+            placeholder="••••••••"
+          >
+        </div>
+        
+        <div class="flex items-center">
+          <input type="checkbox" id="acceptTerms" required class="rounded bg-gray-700 border-gray-600 text-blue-600">
+          <label for="acceptTerms" class="ml-2 text-sm text-gray-300">
+            Acepto los <a href="#" class="text-blue-400 hover:text-blue-300">términos y condiciones</a>
+          </label>
+        </div>
+        
         <button 
-          id="channelsTab"
-          class="tab-btn px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center gap-2 bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+          type="submit"
+          class="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-2 px-4 rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-200 font-semibold"
         >
-          <span class="text-xl">📺</span>
-          <span>Canales 24/7</span>
+          Crear Cuenta
         </button>
+      </form>
+      
+      <div class="mt-4 text-center">
+        <span class="text-gray-400">¿Ya tienes cuenta? </span>
+        <button id="switchToLogin" class="text-blue-400 hover:text-blue-300 font-semibold">Inicia sesión</button>
       </div>
     </div>
   </div>
@@ -47,41 +213,279 @@ import ChannelsComponent from '../components/Channels.astro';
   </div>
 
   <script>
+    // Definir tipos para TypeScript
+    interface UserData {
+      name: string;
+      email: string;
+      plan: 'FREE' | 'PREMIUM' | 'PRO';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       const eventsTab = document.getElementById('eventsTab');
       const channelsTab = document.getElementById('channelsTab');
       const eventsContent = document.getElementById('eventsContent');
       const channelsContent = document.getElementById('channelsContent');
       
+      // Sistema de autenticación
+      const authButtons = document.getElementById('authButtons');
+      const userProfile = document.getElementById('userProfile');
+      const loginBtn = document.getElementById('loginBtn');
+      const registerBtn = document.getElementById('registerBtn');
+      const userMenuBtn = document.getElementById('userMenuBtn');
+      const userName = document.getElementById('userName');
+      const userPlan = document.getElementById('userPlan');
+      
+      // Verificar estado de usuario al cargar
+      checkUserStatus();
+      
+      function checkUserStatus() {
+        // Aquí verificarías el token/sesión del usuario
+        const userToken = localStorage.getItem('userToken');
+        const userData = localStorage.getItem('userData');
+        
+        if (userToken && userData) {
+          const user: UserData = JSON.parse(userData);
+          showUserProfile(user);
+        } else {
+          showAuthButtons();
+        }
+      }
+      
+      function showAuthButtons() {
+        if (authButtons) authButtons.classList.remove('hidden');
+        if (userProfile) userProfile.classList.add('hidden');
+      }
+      
+      function showUserProfile(user: UserData) {
+        if (authButtons) authButtons.classList.add('hidden');
+        if (userProfile) {
+          userProfile.classList.remove('hidden');
+          userProfile.classList.add('flex');
+        }
+        
+        if (userName) userName.textContent = user.name || 'Usuario';
+        if (userPlan) {
+          userPlan.textContent = user.plan || 'FREE';
+          userPlan.className = `text-xs px-2 py-0.5 rounded-full ${
+            user.plan === 'PREMIUM' ? 'bg-yellow-600 text-yellow-100' :
+            user.plan === 'PRO' ? 'bg-purple-600 text-purple-100' :
+            'bg-gray-600 text-gray-100'
+          }`;
+        }
+      }
+      
+      // Event listeners para autenticación
+      loginBtn?.addEventListener('click', () => {
+        showModal('login');
+      });
+      
+      registerBtn?.addEventListener('click', () => {
+        showModal('register');
+      });
+      
+      // Elementos de los modales
+      const loginModal = document.getElementById('loginModal');
+      const registerModal = document.getElementById('registerModal');
+      const closeLoginModal = document.getElementById('closeLoginModal');
+      const closeRegisterModal = document.getElementById('closeRegisterModal');
+      const switchToRegister = document.getElementById('switchToRegister');
+      const switchToLogin = document.getElementById('switchToLogin');
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      
+      // Funciones para manejar modales
+      function showModal(type: 'login' | 'register') {
+        if (type === 'login') {
+          if (loginModal) {
+            loginModal.classList.remove('hidden');
+            loginModal.classList.add('flex');
+          }
+          if (registerModal) {
+            registerModal.classList.add('hidden');
+            registerModal.classList.remove('flex');
+          }
+        } else {
+          if (registerModal) {
+            registerModal.classList.remove('hidden');
+            registerModal.classList.add('flex');
+          }
+          if (loginModal) {
+            loginModal.classList.add('hidden');
+            loginModal.classList.remove('flex');
+          }
+        }
+        document.body.style.overflow = 'hidden';
+      }
+      
+      function hideModals() {
+        if (loginModal) {
+          loginModal.classList.add('hidden');
+          loginModal.classList.remove('flex');
+        }
+        if (registerModal) {
+          registerModal.classList.add('hidden');
+          registerModal.classList.remove('flex');
+        }
+        document.body.style.overflow = 'auto';
+      }
+      
+      // Event listeners para cerrar modales
+      closeLoginModal?.addEventListener('click', hideModals);
+      closeRegisterModal?.addEventListener('click', hideModals);
+      
+      // Cerrar modal al hacer click fuera
+      loginModal?.addEventListener('click', (e) => {
+        if (e.target === loginModal) hideModals();
+      });
+      
+      registerModal?.addEventListener('click', (e) => {
+        if (e.target === registerModal) hideModals();
+      });
+      
+      // Cambiar entre modales
+      switchToRegister?.addEventListener('click', () => showModal('register'));
+      switchToLogin?.addEventListener('click', () => showModal('login'));
+      
+      // Manejar formulario de login
+      loginForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const email = (document.getElementById('loginEmail') as HTMLInputElement)?.value;
+        const password = (document.getElementById('loginPassword') as HTMLInputElement)?.value;
+        
+        // Aquí harías la llamada a tu API de autenticación
+        console.log('Login attempt:', { email, password });
+        
+        // Simulación de login exitoso
+        if (email && password) {
+          const userData: UserData = {
+            name: email.split('@')[0], // Usar parte del email como nombre
+            email: email,
+            plan: 'FREE'
+          };
+          
+          localStorage.setItem('userToken', 'token-' + Date.now());
+          localStorage.setItem('userData', JSON.stringify(userData));
+          showUserProfile(userData);
+          hideModals();
+          
+          // Mostrar mensaje de éxito
+          showNotification('¡Bienvenido! Has iniciado sesión correctamente.', 'success');
+        }
+      });
+      
+      // Manejar formulario de registro
+      registerForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const name = (document.getElementById('registerName') as HTMLInputElement)?.value;
+        const email = (document.getElementById('registerEmail') as HTMLInputElement)?.value;
+        const password = (document.getElementById('registerPassword') as HTMLInputElement)?.value;
+        const confirmPassword = (document.getElementById('registerConfirmPassword') as HTMLInputElement)?.value;
+        
+        // Validaciones
+        if (password !== confirmPassword) {
+          showNotification('Las contraseñas no coinciden', 'error');
+          return;
+        }
+        
+        if (password.length < 6) {
+          showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+          return;
+        }
+        
+        // Aquí harías la llamada a tu API de registro
+        console.log('Register attempt:', { name, email, password });
+        
+        // Simulación de registro exitoso
+        if (name && email && password) {
+          const userData: UserData = {
+            name: name,
+            email: email,
+            plan: 'FREE'
+          };
+          
+          localStorage.setItem('userToken', 'token-' + Date.now());
+          localStorage.setItem('userData', JSON.stringify(userData));
+          showUserProfile(userData);
+          hideModals();
+          
+          // Mostrar mensaje de éxito
+          showNotification('¡Cuenta creada! Bienvenido a NO VEO NADA.', 'success');
+        }
+      });
+      
+      // Función para mostrar notificaciones
+      function showNotification(message: string, type: 'success' | 'error') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-[200] px-4 py-3 rounded-lg text-white font-semibold transition-all duration-300 transform translate-x-full ${
+          type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        }`;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Animar entrada
+        setTimeout(() => {
+          notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+          notification.classList.add('translate-x-full');
+          setTimeout(() => {
+            notification.remove();
+          }, 300);
+        }, 3000);
+      }
+      
+      // Función switchTab que faltaba
       function switchTab(activeTab: string) {
         // Reset tabs
         [eventsTab, channelsTab].forEach(tab => {
-          tab?.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'from-purple-500', 'to-pink-600', 'text-white');
-          tab?.classList.add('bg-gray-700/50', 'text-gray-300');
+          if (tab) {
+            tab.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'from-purple-500', 'to-pink-600', 'text-white');
+            tab.classList.add('bg-gray-700/50', 'text-gray-300');
+          }
         });
         
         // Hide all content
         [eventsContent, channelsContent].forEach(content => {
-          content?.classList.add('hidden');
+          if (content) {
+            content.classList.add('hidden');
+          }
         });
         
         // Show active tab and content
         if (activeTab === 'events') {
-          eventsTab?.classList.remove('bg-gray-700/50', 'text-gray-300');
-          eventsTab?.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
-          eventsContent?.classList.remove('hidden');
+          if (eventsTab) {
+            eventsTab.classList.remove('bg-gray-700/50', 'text-gray-300');
+            eventsTab.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600', 'text-white');
+          }
+          if (eventsContent) {
+            eventsContent.classList.remove('hidden');
+          }
         } else {
-          channelsTab?.classList.remove('bg-gray-700/50', 'text-gray-300');
-          channelsTab?.classList.add('active', 'bg-gradient-to-r', 'from-purple-500', 'to-pink-600', 'text-white');
-          channelsContent?.classList.remove('hidden');
+          if (channelsTab) {
+            channelsTab.classList.remove('bg-gray-700/50', 'text-gray-300');
+            channelsTab.classList.add('active', 'bg-gradient-to-r', 'from-purple-500', 'to-pink-600', 'text-white');
+          }
+          if (channelsContent) {
+            channelsContent.classList.remove('hidden');
+          }
         }
       }
       
+      // Event listeners para las pestañas
       eventsTab?.addEventListener('click', () => switchTab('events'));
       channelsTab?.addEventListener('click', () => switchTab('channels'));
       
-      // Atajos de teclado
+      // Cerrar modales con tecla Escape y atajos de teclado
       document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          hideModals();
+        }
+        
         if ((e.ctrlKey || e.metaKey) && e.key === '1') {
           e.preventDefault();
           switchTab('events');
@@ -93,6 +497,36 @@ import ChannelsComponent from '../components/Channels.astro';
       });
     });
   </script>
+  
+  <style>
+    /* Responsive para móviles */
+    @media (max-width: 768px) {
+      .container > div {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+      
+      h1 {
+        font-size: 2rem !important;
+      }
+      
+      .tab-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.75rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem !important;
+      }
+      
+      .tab-btn span:last-child {
+        display: none;
+      }
+    }
+  </style>
 </Layout>
 
 ## Análisis de tu aplicación:
