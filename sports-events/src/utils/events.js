@@ -4,7 +4,7 @@ async function getScheduleUrl() {
     // Usar variable de entorno o fallback
     const configApiUrl = import.meta.env.PUBLIC_CONFIG_API_URL || 'https://url.fanstv.info/';
     
-    console.log('Intentando obtener configuración desde:', configApiUrl); // Debug
+  
     
     const configRes = await fetch(configApiUrl, {
       method: 'GET',
@@ -19,13 +19,13 @@ async function getScheduleUrl() {
     }
     
     const config = await configRes.json();
-    console.log('Configuración obtenida:', config); // Debug
+   
     
-    if (!config.schedule_url) {
+    if (!config.url) {
       throw new Error('schedule_url no encontrada en la respuesta');
     }
     
-    return config.schedule_url;
+    return config.url;
   } catch (error) {
     console.warn('Error obteniendo URL del VPS, usando URL por defecto:', error);
     // Fallback a la URL original si el VPS no responde
