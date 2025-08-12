@@ -3,6 +3,15 @@ import { getEventsByDays } from '../utils/events.js';
 
 const { eventsByDay, categories } = await getEventsByDays();
 
+// Función para limpiar el nombre del día
+function cleanDayName(dayName: string): string {
+  // Eliminar "- Schedule Time UK GMT" y variaciones similares
+  return dayName
+    .replace(/\s*-\s*Schedule\s+Time\s+UK\s+GMT.*$/i, '')
+    .replace(/\s*-\s*Schedule.*$/i, '')
+    .trim();
+}
+
 const categoryIcons = {
   'Soccer': { icon: '⚽', color: 'from-green-500 to-emerald-600', glow: 'glow-green' },
   'Basketball': { icon: '🏀', color: 'from-orange-500 to-red-600', glow: 'glow' },
@@ -36,9 +45,29 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
 <div class="container mx-auto px-4 py-8">
   <!-- Header futurístico -->
   <div class="text-center mb-12">
-    <h1 class="font-['Orbitron'] text-6xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent mb-4">
-      LIVE SPORTS
-    </h1>
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex-1"></div>
+      <h1 class="font-['Orbitron'] text-6xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
+        NO VEO NADA
+      </h1>
+      <div class="flex-1 flex justify-end">
+        <!-- Toggle para modo multi-reproductor -->
+        <div class="flex items-center space-x-3 bg-gray-800/50 backdrop-blur-sm rounded-lg p-3 border border-gray-700/50">
+          <span class="text-sm text-gray-300">Reproductor único</span>
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="multiPlayerToggle" class="sr-only peer" checked>
+            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gradient-to-r peer-checked:from-blue-500 peer-checked:to-purple-600"></div>
+          </label>
+          <span class="text-sm text-gray-300">Multi-reproductor</span>
+          <div class="flex items-center space-x-1 text-xs text-gray-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>Múltiples ventanas</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-6 glow"></div>
     <p class="text-xl text-gray-300 font-light">
       Eventos deportivos en tiempo real • Sin publicidad • Tecnología avanzada
@@ -49,92 +78,316 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
   <div class="mb-8">
     <!-- Selector de zona horaria -->
     <div class="mb-6">
-      <div class="max-w-md mx-auto">
-        <label for="timezoneSelect" class="block text-center text-gray-400 text-sm mb-2">🌍 Zona horaria:</label>
-        <select 
-          id="timezoneSelect"
-          class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-        >
-          <option value="Europe/London">🇬🇧 Reino Unido (GMT)</option>
-          <option value="Europe/Madrid">🇪🇸 España (CET)</option>
-          <option value="America/New_York">🇺🇸 Nueva York (EST)</option>
-          <option value="America/Los_Angeles">🇺🇸 Los Ángeles (PST)</option>
-          <option value="America/Mexico_City">🇲🇽 México (CST)</option>
-          <option value="America/Argentina/Buenos_Aires">🇦🇷 Buenos Aires (ART)</option>
-          <option value="America/Sao_Paulo">🇧🇷 São Paulo (BRT)</option>
-          <option value="Europe/Paris">🇫🇷 París (CET)</option>
-          <option value="Europe/Berlin">🇩🇪 Berlín (CET)</option>
-          <option value="Europe/Rome">🇮🇹 Roma (CET)</option>
-          <option value="Asia/Tokyo">🇯🇵 Tokio (JST)</option>
-          <option value="Asia/Shanghai">🇨🇳 Shanghai (CST)</option>
-          <option value="Australia/Sydney">🇦🇺 Sídney (AEDT)</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Barra de búsqueda -->
-    <div class="mb-6">
-      <div class="relative max-w-md mx-auto">
-        <input 
-          type="text" 
-          id="searchInput"
-          placeholder="Buscar eventos..."
-          class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
-        >
-        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
-          🔍
-        </div>
-      </div>
-    </div>
-
-    <!-- Filtros por día (solo si hay más de 1 día) -->
-    {Object.keys(eventsByDay).length > 1 && (
-      <div class="mb-6">
-        <h3 class="text-center text-gray-400 text-sm mb-3">Filtrar por día:</h3>
-        <div class="flex flex-wrap justify-center gap-3">
-          <button 
-            class="day-filter-btn active bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow-green"
-            data-day="all"
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        <!-- Selector de zona horaria -->
+        <div>
+          <label for="timezoneSelect" class="block text-center lg:text-left text-gray-400 text-sm mb-2">🌍 Zona horaria:</label>
+          <select 
+            id="timezoneSelect"
+            class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
           >
-            📅 Todos los días
-          </button>
-          {Object.keys(eventsByDay).map((dayName) => (
-            <button 
-              class="day-filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow-green"
-              data-day={dayName}
+            <!-- Europa -->
+            <optgroup label="🇪🇺 Europa">
+              <option value="Europe/London">🇬🇧 Reino Unido (GMT)</option>
+              <option value="Europe/Madrid">🇪🇸 España (CET)</option>
+              <option value="Europe/Paris">🇫🇷 Francia (CET)</option>
+              <option value="Europe/Berlin">🇩🇪 Alemania (CET)</option>
+              <option value="Europe/Rome">🇮🇹 Italia (CET)</option>
+              <option value="Europe/Amsterdam">🇳🇱 Países Bajos (CET)</option>
+              <option value="Europe/Brussels">🇧🇪 Bélgica (CET)</option>
+              <option value="Europe/Zurich">🇨🇭 Suiza (CET)</option>
+              <option value="Europe/Vienna">🇦🇹 Austria (CET)</option>
+              <option value="Europe/Prague">🇨🇿 República Checa (CET)</option>
+              <option value="Europe/Warsaw">🇵🇱 Polonia (CET)</option>
+              <option value="Europe/Stockholm">🇸🇪 Suecia (CET)</option>
+              <option value="Europe/Oslo">🇳🇴 Noruega (CET)</option>
+              <option value="Europe/Copenhagen">🇩🇰 Dinamarca (CET)</option>
+              <option value="Europe/Helsinki">🇫🇮 Finlandia (EET)</option>
+              <option value="Europe/Athens">🇬🇷 Grecia (EET)</option>
+              <option value="Europe/Bucharest">🇷🇴 Rumania (EET)</option>
+              <option value="Europe/Budapest">🇭🇺 Hungría (CET)</option>
+              <option value="Europe/Lisbon">🇵🇹 Portugal (WET)</option>
+              <option value="Europe/Dublin">🇮🇪 Irlanda (GMT)</option>
+              <option value="Europe/Moscow">🇷🇺 Moscú (MSK)</option>
+            </optgroup>
+            
+            <!-- América del Norte -->
+            <optgroup label="🇺���8 América del Norte">
+              <option value="America/New_York">🇺���8 Nueva York (EST)</option>
+              <option value="America/Chicago">🇺���8 Chicago (CST)</option>
+              <option value="America/Denver">🇺���8 Denver (MST)</option>
+              <option value="America/Los_Angeles">🇺���8 Los Ángeles (PST)</option>
+              <option value="America/Anchorage">🇺���8 Alaska (AKST)</option>
+              <option value="Pacific/Honolulu">🇺���8 Hawái (HST)</option>
+              <option value="America/Toronto">🇨🇦 Toronto (EST)</option>
+              <option value="America/Vancouver">🇨🇦 Vancouver (PST)</option>
+              <option value="America/Montreal">🇨🇦 Montreal (EST)</option>
+              <option value="America/Mexico_City">🇲🇽 Ciudad de México (CST)</option>
+              <option value="America/Tijuana">🇲🇽 Tijuana (PST)</option>
+              <option value="America/Cancun">🇲🇽 Cancún (EST)</option>
+            </optgroup>
+            
+            <!-- América Central y Caribe -->
+            <optgroup label="🌴 América Central y Caribe">
+              <option value="America/Guatemala">🇬🇹 Guatemala (CST)</option>
+              <option value="America/Belize">🇧🇿 Belice (CST)</option>
+              <option value="America/Tegucigalpa">🇭🇳 Honduras (CST)</option>
+              <option value="America/Managua">🇳🇮 Nicaragua (CST)</option>
+              <option value="America/Costa_Rica">🇨🇷 Costa Rica (CST)</option>
+              <option value="America/Panama">🇵🇦 Panamá (EST)</option>
+              <option value="America/Havana">🇨🇺 Cuba (CST)</option>
+              <option value="America/Jamaica">🇯🇲 Jamaica (EST)</option>
+              <option value="America/Santo_Domingo">🇩🇴 República Dominicana (AST)</option>
+              <option value="America/Puerto_Rico">🇵🇷 Puerto Rico (AST)</option>
+            </optgroup>
+            
+            <!-- América del Sur -->
+            <optgroup label="🌎 América del Sur">
+              <option value="America/Sao_Paulo">🇧🇷 São Paulo (BRT)</option>
+              <option value="America/Rio_de_Janeiro">🇧🇷 Río de Janeiro (BRT)</option>
+              <option value="America/Manaus">🇧🇷 Manaus (AMT)</option>
+              <option value="America/Argentina/Buenos_Aires">🇦🇷 Buenos Aires (ART)</option>
+              <option value="America/Argentina/Cordoba">🇦🇷 Córdoba (ART)</option>
+              <option value="America/Santiago">🇨🇱 Santiago (CLT)</option>
+              <option value="America/Lima">🇵🇪 Lima (PET)</option>
+              <option value="America/Bogota">🇨🇴 Bogotá (COT)</option>
+              <option value="America/Caracas">🇻🇪 Caracas (VET)</option>
+              <option value="America/La_Paz">🇧🇴 La Paz (BOT)</option>
+              <option value="America/Asuncion">🇵🇾 Asunción (PYT)</option>
+              <option value="America/Montevideo">🇺🇾 Montevideo (UYT)</option>
+              <option value="America/Guyana">🇬🇾 Georgetown (GYT)</option>
+              <option value="America/Paramaribo">🇸🇷 Paramaribo (SRT)</option>
+              <option value="America/Cayenne">🇬🇫 Cayena (GFT)</option>
+            </optgroup>
+            
+            <!-- Asia -->
+            <optgroup label="🌏 Asia">
+              <option value="Asia/Tokyo">🇯🇵 Tokio (JST)</option>
+              <option value="Asia/Shanghai">🇨🇳 Shanghai (CST)</option>
+              <option value="Asia/Hong_Kong">🇭🇰 Hong Kong (HKT)</option>
+              <option value="Asia/Singapore">🇸🇬 Singapur (SGT)</option>
+              <option value="Asia/Seoul">🇰🇷 Seúl (KST)</option>
+              <option value="Asia/Taipei">🇹🇼 Taipéi (CST)</option>
+              <option value="Asia/Bangkok">🇹🇭 Bangkok (ICT)</option>
+              <option value="Asia/Jakarta">🇮🇩 Yakarta (WIB)</option>
+              <option value="Asia/Manila">🇵🇭 Manila (PHT)</option>
+              <option value="Asia/Kuala_Lumpur">🇲🇾 Kuala Lumpur (MYT)</option>
+              <option value="Asia/Ho_Chi_Minh">🇻🇳 Ho Chi Minh (ICT)</option>
+              <option value="Asia/Phnom_Penh">🇰🇭 Phnom Penh (ICT)</option>
+              <option value="Asia/Vientiane">🇱🇦 Vientiane (ICT)</option>
+              <option value="Asia/Yangon">🇲🇲 Yangón (MMT)</option>
+              <option value="Asia/Dhaka">🇧🇩 Dhaka (BST)</option>
+              <option value="Asia/Kolkata">🇮🇳 Mumbai (IST)</option>
+              <option value="Asia/Karachi">🇵🇰 Karachi (PKT)</option>
+              <option value="Asia/Kabul">🇦🇫 Kabul (AFT)</option>
+              <option value="Asia/Tehran">🇮🇷 Teherán (IRST)</option>
+              <option value="Asia/Dubai">🇦🇪 Dubái (GST)</option>
+              <option value="Asia/Riyadh">🇸🇦 Riad (AST)</option>
+              <option value="Asia/Kuwait">🇰🇼 Kuwait (AST)</option>
+              <option value="Asia/Qatar">🇶🇦 Doha (AST)</option>
+              <option value="Asia/Bahrain">🇧🇭 Manama (AST)</option>
+              <option value="Asia/Baghdad">🇮🇶 Bagdad (AST)</option>
+              <option value="Asia/Jerusalem">🇮🇱 Jerusalén (IST)</option>
+              <option value="Asia/Beirut">🇱🇧 Beirut (EET)</option>
+              <option value="Asia/Damascus">🇸🇾 Damasco (EET)</option>
+              <option value="Asia/Amman">🇯🇴 Ammán (EET)</option>
+              <option value="Asia/Yerevan">🇦🇲 Ereván (AMT)</option>
+              <option value="Asia/Baku">🇦🇿 Bakú (AZT)</option>
+              <option value="Asia/Tbilisi">🇬🇪 Tiflis (GET)</option>
+              <option value="Asia/Almaty">🇰🇿 Almaty (ALMT)</option>
+              <option value="Asia/Tashkent">🇺🇿 Taskent (UZT)</option>
+              <option value="Asia/Bishkek">🇰🇬 Biskek (KGT)</option>
+              <option value="Asia/Dushanbe">🇹🇯 Dusambé (TJT)</option>
+              <option value="Asia/Ashgabat">🇹🇲 Asjabad (TMT)</option>
+            </optgroup>
+            
+            <!-- África -->
+            <optgroup label="🌍 África">
+              <option value="Africa/Cairo">🇪🇬 El Cairo (EET)</option>
+              <option value="Africa/Lagos">🇳🇬 Lagos (WAT)</option>
+              <option value="Africa/Johannesburg">🇿🇦 Johannesburgo (SAST)</option>
+              <option value="Africa/Nairobi">🇰🇪 Nairobi (EAT)</option>
+              <option value="Africa/Casablanca">🇲🇦 Casablanca (WET)</option>
+              <option value="Africa/Tunis">🇹🇳 Túnez (CET)</option>
+              <option value="Africa/Algiers">🇩🇿 Argel (CET)</option>
+              <option value="Africa/Tripoli">🇱🇾 Trípoli (EET)</option>
+              <option value="Africa/Khartoum">🇸🇩 Jartum (CAT)</option>
+              <option value="Africa/Addis_Ababa">🇪🇹 Addis Abeba (EAT)</option>
+              <option value="Africa/Dar_es_Salaam">🇹🇿 Dar es Salaam (EAT)</option>
+              <option value="Africa/Kampala">🇺🇬 Kampala (EAT)</option>
+              <option value="Africa/Kigali">🇷🇼 Kigali (CAT)</option>
+              <option value="Africa/Lusaka">🇿🇲 Lusaka (CAT)</option>
+              <option value="Africa/Harare">🇿🇼 Harare (CAT)</option>
+              <option value="Africa/Maputo">🇲🇿 Maputo (CAT)</option>
+              <option value="Africa/Windhoek">🇳🇦 Windhoek (CAT)</option>
+              <option value="Africa/Gaborone">🇧🇼 Gaborone (CAT)</option>
+              <option value="Africa/Maseru">🇱🇸 Maseru (SAST)</option>
+              <option value="Africa/Mbabane">🇸🇿 Mbabane (SAST)</option>
+              <option value="Africa/Dakar">🇸🇳 Dakar (GMT)</option>
+              <option value="Africa/Bamako">🇲🇱 Bamako (GMT)</option>
+              <option value="Africa/Ouagadougou">🇧🇫 Uagadugú (GMT)</option>
+              <option value="Africa/Abidjan">🇨🇮 Abiyán (GMT)</option>
+              <option value="Africa/Accra">🇬🇭 Acra (GMT)</option>
+              <option value="Africa/Lome">🇹🇬 Lomé (GMT)</option>
+              <option value="Africa/Porto-Novo">🇧🇯 Porto-Novo (WAT)</option>
+              <option value="Africa/Niamey">🇳🇪 Niamey (WAT)</option>
+              <option value="Africa/Ndjamena">🇹🇩 Yamena (WAT)</option>
+              <option value="Africa/Bangui">🇨🇫 Bangui (WAT)</option>
+              <option value="Africa/Libreville">🇬🇦 Libreville (WAT)</option>
+              <option value="Africa/Malabo">🇬🇶 Malabo (WAT)</option>
+              <option value="Africa/Douala">🇨🇲 Duala (WAT)</option>
+              <option value="Africa/Kinshasa">🇨🇩 Kinshasa (WAT)</option>
+              <option value="Africa/Brazzaville">🇨🇬 Brazzaville (WAT)</option>
+              <option value="Africa/Luanda">🇦🇴 Luanda (WAT)</option>
+            </optgroup>
+            
+            <!-- Oceanía -->
+            <optgroup label="🇦🇺 Oceanía">
+              <option value="Australia/Sydney">🇦🇺 Sídney (AEDT)</option>
+              <option value="Australia/Melbourne">🇦🇺 Melbourne (AEDT)</option>
+              <option value="Australia/Brisbane">🇦🇺 Brisbane (AEST)</option>
+              <option value="Australia/Perth">🇦🇺 Perth (AWST)</option>
+              <option value="Australia/Adelaide">🇦🇺 Adelaida (ACDT)</option>
+              <option value="Australia/Darwin">🇦🇺 Darwin (ACST)</option>
+              <option value="Australia/Hobart">🇦🇺 Hobart (AEDT)</option>
+              <option value="Pacific/Auckland">🇳🇿 Auckland (NZDT)</option>
+              <option value="Pacific/Fiji">🇫🇯 Suva (FJT)</option>
+              <option value="Pacific/Tahiti">🇵🇫 Tahití (TAHT)</option>
+              <option value="Pacific/Noumea">🇳🇨 Numea (NCT)</option>
+              <option value="Pacific/Port_Moresby">🇵🇬 Port Moresby (PGT)</option>
+              <option value="Pacific/Vanuatu">🇻🇺 Port Vila (VUT)</option>
+              <option value="Pacific/Guadalcanal">🇸🇧 Honiara (SBT)</option>
+              <option value="Pacific/Palau">🇵🇼 Koror (PWT)</option>
+              <option value="Pacific/Yap">🇫🇲 Yap (CHUT)</option>
+              <option value="Pacific/Chuuk">🇫🇲 Chuuk (CHUT)</option>
+              <option value="Pacific/Pohnpei">🇫🇲 Pohnpei (PONT)</option>
+              <option value="Pacific/Kosrae">🇫🇲 Kosrae (KOST)</option>
+              <option value="Pacific/Majuro">🇲🇭 Majuro (MHT)</option>
+              <option value="Pacific/Kwajalein">🇲🇭 Kwajalein (MHT)</option>
+              <option value="Pacific/Nauru">🇳🇷 Yaren (NRT)</option>
+              <option value="Pacific/Funafuti">🇹🇻 Funafuti (TVT)</option>
+              <option value="Pacific/Tarawa">🇰🇮 Tarawa (GILT)</option>
+              <option value="Pacific/Wake">🇺���2 Wake (WAKT)</option>
+              <option value="Pacific/Wallis">🇼🇫 Mata-Utu (WFT)</option>
+              <option value="Pacific/Apia">🇼���8 Apia (WST)</option>
+              <option value="Pacific/Tongatapu">🇹🇴 Nuku'alofa (TOT)</option>
+            </optgroup>
+          </select>
+        </div>
+        
+        <!-- Barra de búsqueda -->
+        <div>
+          <label class="block text-center lg:text-left text-gray-400 text-sm mb-2">🔍 Buscar eventos:</label>
+          <div class="relative">
+            <input 
+              type="text" 
+              id="searchInput"
+              placeholder="Buscar eventos..."
+              class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
-              📅 {dayName}
-            </button>
-          ))}
+            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+              🔍
+            </div>
+          </div>
         </div>
       </div>
-    )}
-
-    <!-- Filtros por categoría (dinámicos) -->
-    <div class="flex flex-wrap justify-center gap-3 mb-4">
-      <button 
-        class="filter-btn active bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow"
-        data-category="all"
-      >
-        🏆 Todos
-      </button>
-      {categories.map((cat) => {
-        const categoryKey = cat as CategoryKey;
-        const category = categoryIcons[categoryKey] || categoryIcons.default;
-        return (
-          <button 
-            class={`filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${category.glow}`}
-            data-category={cat}
-          >
-            {category.icon} {cat}
-          </button>
-        );
-      })}
     </div>
 
-    <!-- Contador de resultados -->
-    <div class="text-center text-gray-400 text-sm">
-      <span id="resultsCount">{totalEvents}</span> eventos encontrados
+    <!-- Panel de filtros colapsable -->
+    <div class="bg-gray-800/30 border border-gray-700/50 rounded-xl p-6 mb-6">
+      <!-- Header de filtros -->
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-300 flex items-center gap-2">
+          🎯 Filtros
+        </h3>
+        <button 
+          id="toggleFilters"
+          class="bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-3 py-1 rounded-lg text-sm transition-all duration-200 flex items-center gap-2"
+        >
+          <span id="filterToggleText">Ocultar</span>
+          <span id="filterToggleIcon" class="transform transition-transform duration-200">▲</span>
+        </button>
+      </div>
+
+      <!-- Contenido de filtros -->
+      <div id="filtersContent" class="space-y-4">
+        <!-- Filtros por día (solo si hay más de 1 día) -->
+        {Object.keys(eventsByDay).length > 1 && (
+          <div>
+            <h4 class="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+              📅 Filtrar por día:
+              <span class="text-xs bg-gray-700/50 px-2 py-1 rounded-full">{Object.keys(eventsByDay).length} días</span>
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+              <button 
+                class="day-filter-btn active bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 glow-green text-center"
+                data-day="all"
+              >
+                📅 Todos
+              </button>
+              {Object.keys(eventsByDay).map((dayName) => {
+                const cleanedDayName = cleanDayName(dayName);
+                // Acortar el nombre del día para mejor visualización
+                const shortDayName = cleanedDayName.split(' ').slice(0, 2).join(' ');
+                return (
+                  <button 
+                    class="day-filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 glow-green text-center"
+                    data-day={dayName}
+                    title={cleanedDayName}
+                  >
+                    📅 {shortDayName}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        <!-- Filtros por categoría -->
+        <div>
+          <h4 class="text-sm font-medium text-gray-400 mb-3 flex items-center gap-2">
+            🏆 Filtrar por deporte:
+            <span class="text-xs bg-gray-700/50 px-2 py-1 rounded-full">{categories.length} categorías</span>
+          </h4>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2">
+            <button 
+              class="filter-btn active bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 glow text-center"
+              data-category="all"
+            >
+              🏆 Todos
+            </button>
+            {categories.map((cat) => {
+              const categoryKey = cat as CategoryKey;
+              const category = categoryIcons[categoryKey] || categoryIcons.default;
+              return (
+                <button 
+                  class={`filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${category.glow} text-center`}
+                  data-category={cat}
+                  title={cat}
+                >
+                  <div class="flex flex-col items-center gap-1">
+                    <span class="text-sm">{category.icon}</span>
+                    <span class="text-xs leading-tight">{cat.length > 8 ? cat.substring(0, 8) + '...' : cat}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contador de resultados y botón de limpiar filtros -->
+    <div class="flex items-center justify-between text-sm">
+      <div class="text-gray-400">
+        <span id="resultsCount">{totalEvents}</span> eventos encontrados
+      </div>
+      <button 
+        id="clearFilters"
+        class="bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-3 py-1 rounded-lg text-xs transition-all duration-200 flex items-center gap-1"
+      >
+        🗑️ Limpiar filtros
+      </button>
     </div>
   </div>
 
@@ -155,16 +408,18 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
   </div>
 
   <!-- Eventos separados por días -->
-  {Object.entries(eventsByDay).map(([dayName, dayEvents]) => (
-    <div class="day-section mb-12" data-day={dayName}>
-      <!-- Header del día -->
-      <div class="flex items-center mb-6">
-        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-        <h2 class="mx-6 text-2xl font-bold text-blue-400 bg-gray-900 px-4 py-2 rounded-lg border border-blue-500/30">
-          📅 {dayName}
-        </h2>
-        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
-      </div>
+  {Object.entries(eventsByDay).map(([dayName, dayEvents]) => {
+    const cleanedDayName = cleanDayName(dayName);
+    return (
+      <div class="day-section mb-12" data-day={dayName}>
+        <!-- Header del día -->
+        <div class="flex items-center mb-6">
+          <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+          <h2 class="mx-6 text-2xl font-bold text-blue-400 bg-gray-900 px-4 py-2 rounded-lg border border-blue-500/30">
+            📅 {cleanedDayName}
+          </h2>
+          <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+        </div>
 
       <!-- Grid de eventos del día -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 events-grid" data-day={dayName}>
@@ -206,13 +461,58 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
                   {event.title}
                 </h3>
                 
-                <div class="flex items-center justify-between">
-                  <span class="text-xs text-gray-400">
-                    Canal: {event.channelId}
-                  </span>
-                  <button class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow">
-                    ▶ VER AHORA
-                  </button>
+                <!-- Lista de canales disponibles -->
+                <div class="mb-4">
+                  <h4 class="text-xs text-gray-400 mb-2 flex items-center gap-1">
+                    📺 Canales disponibles ({event.channels?.length || 1}):
+                  </h4>
+                  <div class="space-y-2 max-h-32 overflow-y-auto">
+                    {event.channels ? event.channels.map((channel: { id: any; name: unknown; country: unknown; language: unknown; quality: unknown; }, index: any) => (
+                      <button 
+                        class="channel-btn w-full bg-gray-800/50 hover:bg-blue-600/20 border border-gray-600/30 hover:border-blue-500/50 rounded-lg p-2 text-left transition-all duration-200 group"
+                        data-channel-id={channel.id}
+                        data-event-title={event.title}
+                      >
+                        <div class="flex items-center justify-between">
+                          <div class="flex-1">
+                            <div class="text-sm font-medium text-white group-hover:text-blue-300">
+                              {channel.name}
+                            </div>
+                            <div class="text-xs text-gray-400 flex items-center gap-2">
+                              <span>{channel.country}</span>
+                              <span>•</span>
+                              <span>{channel.language}</span>
+                              <span>•</span>
+                              <span class="text-green-400">{channel.quality}</span>
+                            </div>
+                          </div>
+                          <div class="text-blue-400 group-hover:text-blue-300">
+                            ▶
+                          </div>
+                        </div>
+                      </button>
+                    )) : (
+                      <button 
+                        class="channel-btn w-full bg-gray-800/50 hover:bg-blue-600/20 border border-gray-600/30 hover:border-blue-500/50 rounded-lg p-2 text-left transition-all duration-200 group"
+                        data-channel-id={event.channelId}
+                        data-event-title={event.title}
+                      >
+                        <div class="flex items-center justify-between">
+                          <div class="flex-1">
+                            <div class="text-sm font-medium text-white group-hover:text-blue-300">
+                              Canal {event.channelId}
+                            </div>
+                            <div class="text-xs text-gray-400">
+                              🌍 Internacional • Multi • HD
+                            </div>
+                          </div>
+                          <div class="text-blue-400 group-hover:text-blue-300">
+                            ▶
+                          </div>
+                        </div>
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
               
@@ -223,7 +523,7 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
         })}
       </div>
     </div>
-  ))}
+  )})}
 
   <!-- Mensaje cuando no hay resultados -->
   <div id="noResults" class="hidden text-center py-12">
@@ -240,17 +540,30 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
   </div>
 </div>
 
-<script>
-  // Funcionalidad de búsqueda y filtros
+<script is:inline>
+  // Verificar disponibilidad de electronAPI al cargar
   document.addEventListener('DOMContentLoaded', () => {
-    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    // Verificar electronAPI con timeout
+    const checkElectronAPI = () => {
+      if (typeof window !== 'undefined' && window.electronAPI) {
+        console.log('✅ electronAPI está disponible:', Object.keys(window.electronAPI));
+      } else {
+        console.log('❌ electronAPI no está disponible, reintentando...');
+        setTimeout(checkElectronAPI, 500);
+      }
+    };
+    
+    checkElectronAPI();
+    
+    // Funcionalidad de búsqueda y filtros
+    const searchInput = document.getElementById('searchInput');
     const filterBtns = document.querySelectorAll('.filter-btn');
     const eventCards = document.querySelectorAll('.event-card');
     const daySections = document.querySelectorAll('.day-section');
     const resultsCount = document.getElementById('resultsCount');
     const totalEvents = document.getElementById('totalEvents');
     const noResults = document.getElementById('noResults');
-    const timezoneSelect = document.getElementById('timezoneSelect') as HTMLSelectElement;
+    const timezoneSelect = document.getElementById('timezoneSelect');
     
     let currentFilter = 'all';
     let currentSearch = '';
@@ -278,7 +591,7 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     }
 
     // Función para convertir horario GMT a zona horaria seleccionada
-    function convertTime(gmtTimeString: string, targetTimezone: string): string {
+    function convertTime(gmtTimeString, targetTimezone) {
       try {
         // Crear fecha base (hoy) con la hora GMT
         const today = new Date();
@@ -311,14 +624,15 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     // Función para actualizar todos los horarios
     function updateAllTimes() {
       eventCards.forEach(card => {
-        const htmlCard = card as HTMLElement;
-        const originalTime = htmlCard.getAttribute('data-original-time');
-        const timeElement = htmlCard.querySelector('.event-time');
-        
-        if (originalTime && timeElement) {
-          const convertedTime = convertTime(originalTime, currentTimezone);
-          timeElement.textContent = `🕐 ${convertedTime}`;
-          htmlCard.setAttribute('data-time', convertedTime);
+        if (card && card.nodeType === Node.ELEMENT_NODE) {
+          const originalTime = card.getAttribute('data-original-time');
+          const timeElement = card.querySelector('.event-time');
+          
+          if (originalTime && timeElement) {
+            const convertedTime = convertTime(originalTime, currentTimezone);
+            timeElement.textContent = `🕐 ${convertedTime}`;
+            card.setAttribute('data-time', convertedTime);
+          }
         }
       });
     }
@@ -326,9 +640,8 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     // Event listener para cambio de zona horaria
     if (timezoneSelect) {
       timezoneSelect.addEventListener('change', (e) => {
-        const target = e.target as HTMLSelectElement;
-        if (target) {
-          currentTimezone = target.value;
+        if (e.target && e.target.value) {
+          currentTimezone = e.target.value;
           updateAllTimes();
         }
       });
@@ -337,53 +650,84 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     // Actualizar horarios al cargar la página
     updateAllTimes();
 
+    // Funcionalidad para toggle de filtros
+    const toggleFiltersBtn = document.getElementById('toggleFilters');
+    const filtersContent = document.getElementById('filtersContent');
+    const filterToggleText = document.getElementById('filterToggleText');
+    const filterToggleIcon = document.getElementById('filterToggleIcon');
+    
+    if (toggleFiltersBtn && filtersContent && filterToggleText && filterToggleIcon) {
+      toggleFiltersBtn.addEventListener('click', () => {
+        const isHidden = filtersContent.style.display === 'none';
+        
+        if (isHidden) {
+          // Mostrar filtros
+          filtersContent.style.display = 'block';
+          filterToggleText.textContent = 'Ocultar';
+          filterToggleIcon.textContent = '▲';
+          filterToggleIcon.style.transform = 'rotate(0deg)';
+        } else {
+          // Ocultar filtros
+          filtersContent.style.display = 'none';
+          filterToggleText.textContent = 'Mostrar';
+          filterToggleIcon.textContent = '▼';
+          filterToggleIcon.style.transform = 'rotate(180deg)';
+        }
+      });
+    }
+
     // Función para filtrar eventos
     function filterEvents() {
       let visibleCount = 0;
       let visibleDays = 0;
       
       daySections.forEach(daySection => {
-        const dayName = (daySection as HTMLElement).getAttribute('data-day') || '';
-        const dayCards = daySection.querySelectorAll('.event-card');
-        let dayVisibleCount = 0;
-        
-        // Verificar si el día debe mostrarse
-        const dayMatches = currentDay === 'all' || dayName === currentDay;
-        
-        if (dayMatches) {
-          dayCards.forEach(card => {
-            const htmlCard = card as HTMLElement;
-            const category = htmlCard.getAttribute('data-category') || '';
-            const title = htmlCard.getAttribute('data-title') || '';
-            const time = htmlCard.getAttribute('data-time') || '';
-            
-            const matchesFilter = currentFilter === 'all' || category === currentFilter;
-            const matchesSearch = currentSearch === '' || 
-              title.includes(currentSearch.toLowerCase()) || 
-              time.includes(currentSearch) ||
-              category.toLowerCase().includes(currentSearch.toLowerCase());
-            
-            if (matchesFilter && matchesSearch) {
-              htmlCard.style.display = 'block';
-              visibleCount++;
-              dayVisibleCount++;
-            } else {
-              htmlCard.style.display = 'none';
-            }
-          });
-        } else {
-          // Ocultar todas las tarjetas del día si no coincide con el filtro de día
-          dayCards.forEach(card => {
-            (card as HTMLElement).style.display = 'none';
-          });
-        }
-        
-        // Mostrar/ocultar sección del día
-        if (dayVisibleCount > 0 && dayMatches) {
-          (daySection as HTMLElement).style.display = 'block';
-          visibleDays++;
-        } else {
-          (daySection as HTMLElement).style.display = 'none';
+        if (daySection && daySection.nodeType === Node.ELEMENT_NODE) {
+          const dayName = daySection.getAttribute('data-day') || '';
+          const dayCards = daySection.querySelectorAll('.event-card');
+          let dayVisibleCount = 0;
+          
+          // Verificar si el día debe mostrarse
+          const dayMatches = currentDay === 'all' || dayName === currentDay;
+          
+          if (dayMatches) {
+            dayCards.forEach(card => {
+              if (card && card.nodeType === Node.ELEMENT_NODE) {
+                const category = card.getAttribute('data-category') || '';
+                const title = card.getAttribute('data-title') || '';
+                const time = card.getAttribute('data-time') || '';
+                
+                const matchesFilter = currentFilter === 'all' || category === currentFilter;
+                const matchesSearch = currentSearch === '' || 
+                  title.includes(currentSearch.toLowerCase()) || 
+                  time.includes(currentSearch) ||
+                  category.toLowerCase().includes(currentSearch.toLowerCase());
+                
+                if (matchesFilter && matchesSearch) {
+                  card.style.display = 'block';
+                  visibleCount++;
+                  dayVisibleCount++;
+                } else {
+                  card.style.display = 'none';
+                }
+              }
+            });
+          } else {
+            // Ocultar todas las tarjetas del día si no coincide con el filtro de día
+            dayCards.forEach(card => {
+              if (card && card.nodeType === Node.ELEMENT_NODE) {
+                card.style.display = 'none';
+              }
+            });
+          }
+          
+          // Mostrar/ocultar sección del día
+          if (dayVisibleCount > 0 && dayMatches) {
+            daySection.style.display = 'block';
+            visibleDays++;
+          } else {
+            daySection.style.display = 'none';
+          }
         }
       });
       
@@ -402,9 +746,8 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
     // Event listener para búsqueda
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (target) {
-          currentSearch = target.value;
+        if (e.target && e.target.value !== undefined) {
+          currentSearch = e.target.value;
           filterEvents();
         }
       });
@@ -447,18 +790,395 @@ const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => tota
       });
     });
 
-    // Funcionalidad de click en eventos
-    eventCards.forEach(card => {
-      card.addEventListener('click', () => {
-        const channelId = (card as HTMLElement).getAttribute('data-channel-id');
+    // Funcionalidad de click en canales - ACTUALIZADA
+    const channelBtns = document.querySelectorAll('.channel-btn');
+    channelBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const channelId = btn.getAttribute('data-channel-id');
+        const eventTitle = btn.getAttribute('data-event-title');
+        
         if (channelId) {
-          if (typeof window !== 'undefined' && (window as any).electronAPI) {
-            // Para Electron
-            (window as any).electronAPI.loadStream(channelId);
+          console.log(`Reproduciendo: ${eventTitle} - Canal ${channelId}`);
+          
+          if (typeof window !== 'undefined' && window.electronAPI) {
+            // Abrir directamente la ventana del canal
+            openChannelWindow(channelId, eventTitle);
           } else {
-            // Para web (desarrollo)
             console.log('Cargando canal:', channelId);
           }
+        }
+      });
+    });
+
+    // Funcionalidad de click en eventos (corregido para JavaScript)
+    eventCards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (e.target && e.target.nodeType === Node.ELEMENT_NODE && !e.target.closest('.channel-btn')) {
+          const channelId = card.getAttribute('data-channel-id');
+          if (channelId) {
+            if (typeof window !== 'undefined' && window.electronAPI) {
+              openChannelWindow(channelId, 'Evento principal');
+            } else {
+              console.log('Cargando canal principal:', channelId);
+            }
+          }
+        }
+      });
+    });
+
+
+
+    // Gestión de ventanas
+    async function updateWindowsList() {
+      if (typeof window !== 'undefined' && window.electronAPI) {
+        try {
+          const result = await window.electronAPI.listWindows();
+          const windowsList = document.getElementById('windowsList');
+          
+          if (windowsList && result.success && result.windows.length > 0) {
+            windowsList.innerHTML = result.windows.map(win => `
+              <div class="flex items-center justify-between bg-gray-700/30 p-3 rounded-lg">
+                <span class="text-sm text-gray-300">${win.title}</span>
+                <div class="flex gap-2">
+                  <button 
+                    class="focus-window-btn bg-blue-600/50 hover:bg-blue-500/50 px-2 py-1 rounded text-xs"
+                    data-window-id="${win.id}"
+                  >
+                    👁️ Enfocar
+                  </button>
+                  <button 
+                    class="close-window-btn bg-red-600/50 hover:bg-red-500/50 px-2 py-1 rounded text-xs"
+                    data-window-id="${win.id}"
+                  >
+                    ❌ Cerrar
+                  </button>
+                </div>
+              </div>
+            `).join('');
+            
+            // Agregar event listeners a los botones
+            document.querySelectorAll('.focus-window-btn').forEach(btn => {
+              btn.addEventListener('click', async () => {
+                const windowId = btn.getAttribute('data-window-id');
+                await window.electronAPI.focusWindow(windowId);
+              });
+            });
+            
+            document.querySelectorAll('.close-window-btn').forEach(btn => {
+              btn.addEventListener('click', async () => {
+                const windowId = btn.getAttribute('data-window-id');
+                await window.electronAPI.closeWindow(windowId);
+                updateWindowsList();
+              });
+            });
+            
+          } else if (windowsList) {
+            windowsList.innerHTML = '<p class="text-gray-400 text-sm">No hay ventanas abiertas</p>';
+          }
+        } catch (error) {
+          console.error('Error actualizando lista de ventanas:', error);
+        }
+      }
+    }
+
+    // Event listeners para gestión de ventanas
+    const refreshBtn = document.getElementById('refreshWindowsList');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', updateWindowsList);
+    }
+    
+    const closeAllBtn = document.getElementById('closeAllWindows');
+    if (closeAllBtn) {
+      closeAllBtn.addEventListener('click', async () => {
+        if (typeof window !== 'undefined' && window.electronAPI) {
+          await window.electronAPI.closeAllWindows();
+          updateWindowsList();
+        }
+      });
+    }
+
+    // Actualizar lista al cargar
+    updateWindowsList();
+    
+    // Actualizar lista cada 5 segundos
+    setInterval(updateWindowsList, 5000);
+
+    // Event listener para el botón de limpiar filtros
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    if (clearFiltersBtn) {
+      clearFiltersBtn.addEventListener('click', () => {
+        // Resetear búsqueda
+        currentSearch = '';
+        if (searchInput) {
+          searchInput.value = '';
+        }
+        
+        // Resetear filtro de categoría
+        currentFilter = 'all';
+        filterBtns.forEach(btn => {
+          btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+          btn.classList.add('bg-gray-700/50');
+          if (btn.getAttribute('data-category') === 'all') {
+            btn.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+            btn.classList.remove('bg-gray-700/50');
+          }
+        });
+        
+        // Resetear filtro de día
+        currentDay = 'all';
+        const dayFilterBtns = document.querySelectorAll('.day-filter-btn');
+        dayFilterBtns.forEach(btn => {
+          btn.classList.remove('active', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+          btn.classList.add('bg-gray-700/50');
+          if (btn.getAttribute('data-day') === 'all') {
+            btn.classList.add('active', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+            btn.classList.remove('bg-gray-700/50');
+          }
+        });
+        
+        // Aplicar filtros (mostrar todos)
+        filterEvents();
+      });
+    }
+
+    // Variable para el modo de reproductor
+    let isMultiPlayerMode = true;
+    
+    // Variable para prevenir múltiples clics
+    let isProcessingClick = false;
+    
+    // Inicializar el toggle
+    function initializePlayerModeToggle() {
+      const toggle = document.getElementById('multiPlayerToggle');
+      if (toggle) {
+        // Cargar preferencia guardada
+        const savedMode = localStorage.getItem('playerMode');
+        if (savedMode !== null) {
+          isMultiPlayerMode = savedMode === 'multi';
+          toggle.checked = isMultiPlayerMode;
+        }
+        
+        // Event listener para cambios
+        toggle.addEventListener('change', (e) => {
+          isMultiPlayerMode = e.target.checked;
+          localStorage.setItem('playerMode', isMultiPlayerMode ? 'multi' : 'single');
+          
+          console.log('Modo cambiado a:', isMultiPlayerMode ? 'Multi-reproductor' : 'Reproductor único');
+          
+          // Mostrar notificación visual
+          showModeNotification(isMultiPlayerMode);
+        });
+      }
+    }
+    
+    // Función para mostrar notificación del cambio de modo
+    function showModeNotification(isMulti) {
+      const notification = document.createElement('div');
+      notification.className = `fixed top-4 right-4 z-50 px-4 py-2 rounded-lg text-white font-medium transition-all duration-300 ${
+        isMulti ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gradient-to-r from-green-500 to-emerald-600'
+      }`;
+      notification.textContent = isMulti ? '🎬 Modo Multi-reproductor activado' : '📺 Modo Reproductor único activado';
+      
+      document.body.appendChild(notification);
+      
+      // Animar entrada
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+      }, 100);
+      
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+        }, 300);
+      }, 3000);
+    }
+    
+    // Re-agregar event listeners para botones de canal (después de que el DOM esté listo)
+    function addChannelListeners() {
+      const channelBtns = document.querySelectorAll('.channel-btn');
+      channelBtns.forEach(btn => {
+        // Verificar si ya tiene el listener para evitar duplicados
+        if (!btn.hasAttribute('data-listener-added')) {
+          btn.addEventListener('click', handleChannelClick);
+          btn.setAttribute('data-listener-added', 'true');
+        }
+      });
+    }
+    
+    function handleChannelClick(e) {
+      e.stopPropagation();
+      
+      // Prevenir múltiples clics
+      if (isProcessingClick) {
+        console.log('Click ya en proceso, ignorando...');
+        return;
+      }
+      
+      const channelId = this.getAttribute('data-channel-id');
+      const eventTitle = this.getAttribute('data-event-title');
+      
+      if (channelId) {
+        console.log(`Reproduciendo: ${eventTitle} - Canal ${channelId}`);
+        
+        if (typeof window !== 'undefined' && window.electronAPI) {
+          // Verificar si el canal ya está abierto y enfocarlo, o abrir nueva ventana
+          openChannelWindow(channelId, eventTitle);
+        } else {
+          console.log('Cargando canal:', channelId);
+        }
+      }
+    }
+    
+    // Nueva función para manejar la apertura de canales
+    async function openChannelWindow(channelId, eventTitle) {
+      if (isProcessingClick) {
+        console.log('Ya procesando apertura de canal, ignorando...');
+        return;
+      }
+      
+      isProcessingClick = true;
+      
+      try {
+        console.log('Intentando abrir canal:', channelId, 'Título:', eventTitle, 'Modo:', isMultiPlayerMode ? 'Multi' : 'Único');
+        
+        if (isMultiPlayerMode) {
+          // MODO MULTI-REPRODUCTOR: Verificar si ya existe y enfocar, o crear nueva ventana
+          const windowsResult = await window.electronAPI.listWindows();
+          
+          if (windowsResult.success && windowsResult.windows.length > 0) {
+            const existingWindow = windowsResult.windows.find(win => {
+              const winId = win.id.toLowerCase();
+              const winTitle = win.title.toLowerCase();
+              const targetChannel = `channel_${channelId}`.toLowerCase();
+              const targetStream = `stream-${channelId}`.toLowerCase();
+              
+              return winId.includes(targetChannel) || 
+                     winTitle.includes(targetStream) ||
+                     winId === targetChannel;
+            });
+            
+            if (existingWindow) {
+              console.log('Canal ya abierto, enfocando ventana existente:', existingWindow.id);
+              await window.electronAPI.focusWindow(existingWindow.id);
+              return;
+            }
+          }
+          
+          // Si no existe, abrir nueva ventana con título personalizado
+          console.log('Abriendo nueva ventana para:', eventTitle);
+          const result = await window.electronAPI.openNewWindow(channelId, { title: eventTitle });
+          
+          if (result && result.success) {
+            console.log('Nueva ventana abierta exitosamente:', result);
+          } else {
+            console.error('Error al abrir nueva ventana:', result);
+          }
+        } else {
+          // MODO REPRODUCTOR ÚNICO: Siempre usar la misma ventana, reemplazando contenido
+          console.log('Modo reproductor único: verificando ventanas existentes...');
+          
+          const windowsResult = await window.electronAPI.listWindows();
+          
+          if (windowsResult.success && windowsResult.windows.length > 0) {
+            // Si hay ventanas abiertas, usar la primera para reemplazar el contenido
+            const firstWindow = windowsResult.windows[0];
+            console.log('Reemplazando contenido en ventana existente con:', eventTitle);
+            
+            // Cargar el nuevo canal en la ventana existente
+            const result = await window.electronAPI.loadStream(channelId, { 
+              newWindow: false, 
+              replaceWindow: firstWindow.id,
+              title: eventTitle
+            });
+            
+            if (result && result.success) {
+              console.log('Canal reemplazado en ventana existente:', result);
+              // Enfocar la ventana
+              await window.electronAPI.focusWindow(firstWindow.id);
+            } else {
+              console.error('Error al reemplazar canal:', result);
+            }
+          } else {
+            // Si no hay ventanas, crear una nueva (será la única)
+            console.log('No hay ventanas, creando primera ventana para:', eventTitle);
+            const result = await window.electronAPI.openNewWindow(channelId, { title: eventTitle });
+            
+            if (result && result.success) {
+              console.log('Primera ventana creada para modo único:', result);
+            } else {
+              console.error('Error al crear primera ventana:', result);
+            }
+          }
+        }
+        
+        // Actualizar lista de ventanas
+        updateWindowsList();
+        
+      } catch (error) {
+        console.error('Error al abrir canal:', error);
+      } finally {
+        // Liberar el lock después de un pequeño delay
+        setTimeout(() => {
+          isProcessingClick = false;
+        }, 1000);
+      }
+    }
+    
+    // Inicializar todo
+    initializePlayerModeToggle();
+    addChannelListeners();
+    
+    // Modificar la función filterEvents para evitar múltiples listeners
+    const originalFilterEvents = filterEvents;
+    filterEvents = function() {
+      originalFilterEvents();
+      // Solo re-agregar listeners si hay nuevos elementos
+      setTimeout(() => {
+        const channelBtns = document.querySelectorAll('.channel-btn:not([data-listener-added])');
+        if (channelBtns.length > 0) {
+          addChannelListeners();
+        }
+      }, 100);
+    };
+
+    // Funcionalidad para filtros rápidos
+    const quickFilters = document.querySelectorAll('.quick-filter');
+    quickFilters.forEach(filter => {
+      filter.addEventListener('click', () => {
+        const categories = filter.getAttribute('data-categories');
+        const timeFilter = filter.getAttribute('data-time');
+        
+        if (categories) {
+          // Filtro por categorías múltiples
+          const categoryList = JSON.parse(categories);
+          // Por simplicidad, seleccionar la primera categoría
+          if (categoryList.length > 0) {
+            currentFilter = categoryList[0];
+            
+            // Actualizar botones
+            filterBtns.forEach(btn => {
+              btn.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+              btn.classList.add('bg-gray-700/50');
+              if (btn.getAttribute('data-category') === currentFilter) {
+                btn.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+                btn.classList.remove('bg-gray-700/50');
+              }
+            });
+            
+            filterEvents();
+          }
+        }
+        
+        if (timeFilter === 'now') {
+          // Filtro por eventos en vivo (implementar lógica según necesidades)
+          console.log('Filtrar eventos en vivo');
         }
       });
     });

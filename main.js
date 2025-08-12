@@ -12,7 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 let win;
-let streamWin;
+// Cambiar de una sola ventana a un array de ventanas
+let streamWindows = new Map(); // Map para gestionar múltiples ventanas por ID
+let windowCounter = 0; // Contador para IDs únicos
 
 async function createWindow() {
   win = new BrowserWindow({
@@ -39,37 +41,42 @@ async function createWindow() {
   }
 }
 
-// Función para crear ventana de stream con bloqueo agresivo - CORREGIDA
-async function createStreamWindow(url) {
-  console.log('Creando ventana de stream para:', url);
-  
-  // VERIFICAR Y CERRAR VENTANA ANTERIOR CORRECTAMENTE
-  if (streamWin && !streamWin.isDestroyed()) {
-    console.log('Cerrando ventana anterior...');
-    streamWin.close();
-    streamWin = null;
-    // Esperar un poco para asegurar que se cierre completamente
-    await new Promise(resolve => setTimeout(resolve, 100));
+// Función para crear ventana de stream con bloqueo agresivo - MODIFICADA PARA MÚLTIPLES VENTANAS
+async function createStreamWindow(url, windowId = null, options = {}) {
+  // Si no se proporciona windowId, generar uno único
+  if (!windowId) {
+    windowId = `stream_${Date.now()}`;
   }
-
-  // CREAR NUEVA VENTANA
-  streamWin = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    backgroundColor: '#000',
+  
+  // Si la ventana ya existe, enfocarla
+  if (streamWindows.has(windowId)) {
+    streamWindows.get(windowId).focus();
+    return { windowId, action: 'focused' };
+  }
+  
+  // Crear nueva ventana
+  const streamWin = new BrowserWindow({
+    width: 1200,
+    height: 800,
+   backgroundColor:"#000",
     webPreferences: {
-      preload: undefined,
       nodeIntegration: false,
-      contextIsolation: true
-    }
+      contextIsolation: true,
+      webSecurity: false,
+      allowRunningInsecureContent: true
+    },
+    title: options.title || 'Stream Player', // Usar título personalizado
+    icon: path.join(__dirname, 'assets/icon.png')
   });
-
-  // MANEJAR CIERRE DE VENTANA
+  
+  // Guardar referencia
+  streamWindows.set(windowId, streamWin);
+  
+  // Limpiar referencia cuando se cierre
   streamWin.on('closed', () => {
-    console.log('Ventana de stream cerrada');
-    streamWin = null;
+    streamWindows.delete(windowId);
   });
-
+  
   // Motor de filtros - BLOQUEO AGRESIVO
   const blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
   blocker.enableBlockingInSession(session.defaultSession);
@@ -205,24 +212,94 @@ async function createStreamWindow(url) {
   try {
     await streamWin.loadURL(url);
     console.log('Stream cargado exitosamente:', url);
+    return { windowId, action: 'created' };
   } catch (error) {
     console.error('Error cargando stream:', error);
+    streamWindows.delete(windowId);
+    throw error;
   }
 }
 
-// Manejar la carga de streams - CORREGIDO
-ipcMain.handle('load-url', async (_, channelId) => {
+// Manejar la carga de streams - MODIFICADO PARA SOPORTAR TÍTULOS PERSONALIZADOS
+ipcMain.handle('load-url', async (_, channelId, options = {}) => {
   try {
-    // CORREGIR LA GENERACIÓN DE URL
     const url = `https://thedaddy.to/embed/stream-${channelId}.php`;
     console.log('Cargando stream con ID:', channelId);
     console.log('URL generada:', url);
+    console.log('Opciones:', options);
     
-    await createStreamWindow(url);
-    return { success: true };
+    // Si se especifica replaceWindow, reemplazar contenido en ventana existente
+    if (options.replaceWindow && streamWindows.has(options.replaceWindow)) {
+      const existingWindow = streamWindows.get(options.replaceWindow);
+      console.log('Reemplazando contenido en ventana:', options.replaceWindow);
+      
+      // Actualizar título si se proporciona
+      if (options.title) {
+        existingWindow.setTitle(options.title);
+      }
+      
+      try {
+        await existingWindow.loadURL(url);
+        console.log('Contenido reemplazado exitosamente en ventana existente');
+        return { success: true, windowId: options.replaceWindow, action: 'replaced' };
+      } catch (error) {
+        console.error('Error reemplazando contenido:', error);
+        throw error;
+      }
+    }
+    
+    // Lógica original para crear nueva ventana
+    const windowId = options.newWindow ? null : `channel_${channelId}`;
+    const result = await createStreamWindow(url, windowId, options);
+    return { success: true, ...result };
     
   } catch (error) {
     console.error('Error en load-url handler:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Nuevo handler para gestionar ventanas
+ipcMain.handle('manage-windows', async (_, action, data) => {
+  try {
+    switch (action) {
+      case 'list':
+        return {
+          success: true,
+          windows: Array.from(streamWindows.keys()).map(id => ({
+            id,
+            title: streamWindows.get(id).getTitle()
+          }))
+        };
+        
+      case 'close':
+        if (streamWindows.has(data.windowId)) {
+          streamWindows.get(data.windowId).close();
+          return { success: true };
+        }
+        return { success: false, error: 'Ventana no encontrada' };
+        
+      case 'focus':
+        if (streamWindows.has(data.windowId)) {
+          streamWindows.get(data.windowId).focus();
+          return { success: true };
+        }
+        return { success: false, error: 'Ventana no encontrada' };
+        
+      case 'closeAll':
+        streamWindows.forEach(window => {
+          if (!window.isDestroyed()) {
+            window.close();
+          }
+        });
+        streamWindows.clear();
+        return { success: true };
+        
+      default:
+        return { success: false, error: 'Acción no reconocida' };
+    }
+  } catch (error) {
+    console.error('Error en manage-windows handler:', error);
     return { success: false, error: error.message };
   }
 });
@@ -236,8 +313,10 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  // Cerrar ventana de stream al salir
-  if (streamWin && !streamWin.isDestroyed()) {
-    streamWin.close();
-  }
+  // Cerrar todas las ventanas de stream al salir
+  streamWindows.forEach(window => {
+    if (!window.isDestroyed()) {
+      window.close();
+    }
+  });
 });

@@ -79,15 +79,18 @@ export async function getEventsByDays() {
           allCategories.add(category);
           
           dayObj[category].forEach(ev => {
+            const channels = [];
+            
             // Procesar channels
             if (ev.channels && Array.isArray(ev.channels)) {
               ev.channels.forEach(ch => {
                 if (ch.channel_id && !isNaN(+ch.channel_id)) {
-                  events.push({
-                    time: ev.time || 'N/A',
-                    title: ev.event || 'Sin título',
-                    channelId: ch.channel_id,
-                    category: category
+                  channels.push({
+                    id: ch.channel_id,
+                    name: ch.channel_name || `Canal ${ch.channel_id}`,
+                    country: ch.country || 'Internacional',
+                    language: ch.language || 'Multi',
+                    quality: ch.quality || 'HD'
                   });
                 }
               });
@@ -97,13 +100,26 @@ export async function getEventsByDays() {
             if (ev.channels2 && Array.isArray(ev.channels2)) {
               ev.channels2.forEach(ch => {
                 if (ch.channel_id && !isNaN(+ch.channel_id)) {
-                  events.push({
-                    time: ev.time || 'N/A',
-                    title: ev.event || 'Sin título',
-                    channelId: ch.channel_id,
-                    category: category
+                  channels.push({
+                    id: ch.channel_id,
+                    name: ch.channel_name || `Canal ${ch.channel_id}`,
+                    country: ch.country || 'Internacional',
+                    language: ch.language || 'Multi',
+                    quality: ch.quality || 'HD'
                   });
                 }
+              });
+            }
+            
+            // Solo agregar eventos que tengan canales
+            if (channels.length > 0) {
+              events.push({
+                time: ev.time || 'N/A',
+                title: ev.event || 'Sin título',
+                channels: channels,
+                category: category,
+                // Canal principal (el primero) para compatibilidad
+                channelId: channels[0].id
               });
             }
           });
@@ -137,12 +153,27 @@ function getMockEventsByDays() {
   return {
     eventsByDay: {
       'Hoy - Eventos de Prueba': [
-        { time: '15:00', title: 'Real Madrid vs Barcelona - El Clásico', channelId: '746', category: 'Soccer' },
-        { time: '18:30', title: 'Lakers vs Warriors - NBA Finals', channelId: '123', category: 'Basketball' },
-        { time: '20:00', title: 'Federer vs Nadal - Wimbledon', channelId: '456', category: 'Tennis' },
-        { time: '22:00', title: 'UFC 300 - Main Event', channelId: '789', category: 'MMA' },
-        { time: '16:45', title: 'Formula 1 - Monaco GP', channelId: '321', category: 'Motorsport' },
-        { time: '19:15', title: 'WWE Monday Night Raw', channelId: '654', category: 'WWE' }
+        { 
+          time: '15:00', 
+          title: 'Real Madrid vs Barcelona - El Clásico', 
+          channelId: '746',
+          category: 'Soccer',
+          channels: [
+            { id: '746', name: 'ESPN España', country: '🇪🇸 España', language: 'Español', quality: 'HD' },
+            { id: '747', name: 'Sky Sports UK', country: '🇬🇧 Reino Unido', language: 'Inglés', quality: 'HD' },
+            { id: '748', name: 'beIN Sports FR', country: '🇫🇷 Francia', language: 'Francés', quality: 'HD' }
+          ]
+        },
+        { 
+          time: '18:30', 
+          title: 'Lakers vs Warriors - NBA Finals', 
+          channelId: '123',
+          category: 'Basketball',
+          channels: [
+            { id: '123', name: 'ESPN USA', country: '🇺🇸 Estados Unidos', language: 'Inglés', quality: 'HD' },
+            { id: '124', name: 'NBA TV', country: '🇺🇸 Estados Unidos', language: 'Inglés', quality: '4K' }
+          ]
+        }
       ]
     },
     categories: ['Soccer', 'Basketball', 'Tennis', 'MMA', 'Motorsport', 'WWE']
