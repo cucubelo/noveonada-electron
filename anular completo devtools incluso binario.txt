@@ -1,0 +1,29 @@
+ Cómo deshabilitar completamente DevTools en producción
+
+
+Deshabilitar la opción en cada ventana
+
+
+const win = new BrowserWindow({
+  webPreferences: {
+    devTools: false          // <- bloquea la apertura
+  }
+});
+
+
+Interceptar atajos de teclado
+JavaScript
+
+win.webContents.on('before-input-event', (event, input) => {
+  if (input.control && input.shift && input.key.toLowerCase() === 'i') {
+    event.preventDefault();   // anula Ctrl+Shift+I
+  }
+});
+
+
+
+Fuses de Electron (opcional, muy seguro)
+Con @electron/fuses puedes quemar la posibilidad de abrir DevTools incluso si alguien modifica el binario:
+
+
+npx electron-fuses disable-dev-tools --app ./dist/win-unpacked/YourApp.exe

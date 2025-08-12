@@ -1,0 +1,500 @@
+---
+import { getEventsByDays } from '../utils/events.js';
+
+const { eventsByDay, categories } = await getEventsByDays();
+
+const categoryIcons = {
+  'Soccer': { icon: '⚽', color: 'from-green-500 to-emerald-600', glow: 'glow-green' },
+  'Basketball': { icon: '🏀', color: 'from-orange-500 to-red-600', glow: 'glow' },
+  'Tennis': { icon: '🎾', color: 'from-yellow-500 to-green-600', glow: 'glow-green' },
+  'Baseball': { icon: '⚾', color: 'from-blue-500 to-indigo-600', glow: 'glow' },
+  'Ice Hockey': { icon: '🏒', color: 'from-cyan-500 to-blue-600', glow: 'glow' },
+  'MMA': { icon: '🥊', color: 'from-red-500 to-pink-600', glow: 'glow' },
+  'WWE': { icon: '🤼', color: 'from-purple-500 to-pink-600', glow: 'glow-purple' },
+  'Motorsport': { icon: '🏎️', color: 'from-gray-500 to-red-600', glow: 'glow' },
+  'PPV Events': { icon: '🎬', color: 'from-red-500 to-orange-600', glow: 'glow' },
+  'TV Shows': { icon: '📺', color: 'from-blue-500 to-purple-600', glow: 'glow-purple' },
+  'Cricket': { icon: '🏏', color: 'from-green-500 to-blue-600', glow: 'glow-green' },
+  'Golf': { icon: '⛳', color: 'from-green-400 to-emerald-500', glow: 'glow-green' },
+  'Volleyball': { icon: '🏐', color: 'from-yellow-400 to-orange-500', glow: 'glow' },
+  'Cycling': { icon: '🚴', color: 'from-blue-400 to-cyan-500', glow: 'glow' },
+  'Athletics': { icon: '🏃', color: 'from-red-400 to-pink-500', glow: 'glow' },
+  'Water Sports': { icon: '🏊', color: 'from-blue-400 to-teal-500', glow: 'glow' },
+  'Snooker': { icon: '🎱', color: 'from-gray-400 to-slate-600', glow: 'glow' },
+  'Field Hockey': { icon: '🏑', color: 'from-green-400 to-lime-500', glow: 'glow-green' },
+  'Bowling': { icon: '🎳', color: 'from-purple-400 to-indigo-500', glow: 'glow-purple' },
+  'Squash': { icon: '🏓', color: 'from-orange-400 to-red-500', glow: 'glow' },
+  'default': { icon: '🏆', color: 'from-blue-500 to-purple-600', glow: 'glow-purple' }
+} as const;
+
+type CategoryKey = keyof typeof categoryIcons;
+
+// Calcular total de eventos
+const totalEvents = Object.values(eventsByDay).reduce((total, dayEvents) => total + dayEvents.length, 0);
+---
+
+<div class="container mx-auto px-4 py-8">
+  <!-- Header futurístico -->
+  <div class="text-center mb-12">
+    <h1 class="font-['Orbitron'] text-6xl font-black bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent mb-4">
+      LIVE SPORTS
+    </h1>
+    <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-500 mx-auto mb-6 glow"></div>
+    <p class="text-xl text-gray-300 font-light">
+      Eventos deportivos en tiempo real • Sin publicidad • Tecnología avanzada
+    </p>
+  </div>
+
+  <!-- Buscador y Filtros -->
+  <div class="mb-8">
+    <!-- Selector de zona horaria -->
+    <div class="mb-6">
+      <div class="max-w-md mx-auto">
+        <label for="timezoneSelect" class="block text-center text-gray-400 text-sm mb-2">🌍 Zona horaria:</label>
+        <select 
+          id="timezoneSelect"
+          class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+        >
+          <option value="Europe/London">🇬🇧 Reino Unido (GMT)</option>
+          <option value="Europe/Madrid">🇪🇸 España (CET)</option>
+          <option value="America/New_York">🇺🇸 Nueva York (EST)</option>
+          <option value="America/Los_Angeles">🇺🇸 Los Ángeles (PST)</option>
+          <option value="America/Mexico_City">🇲🇽 México (CST)</option>
+          <option value="America/Argentina/Buenos_Aires">🇦🇷 Buenos Aires (ART)</option>
+          <option value="America/Sao_Paulo">🇧🇷 São Paulo (BRT)</option>
+          <option value="Europe/Paris">🇫🇷 París (CET)</option>
+          <option value="Europe/Berlin">🇩🇪 Berlín (CET)</option>
+          <option value="Europe/Rome">🇮🇹 Roma (CET)</option>
+          <option value="Asia/Tokyo">🇯🇵 Tokio (JST)</option>
+          <option value="Asia/Shanghai">🇨🇳 Shanghai (CST)</option>
+          <option value="Australia/Sydney">🇦🇺 Sídney (AEDT)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Barra de búsqueda -->
+    <div class="mb-6">
+      <div class="relative max-w-md mx-auto">
+        <input 
+          type="text" 
+          id="searchInput"
+          placeholder="Buscar eventos..."
+          class="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 pl-12 text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+        >
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+          🔍
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros por día (solo si hay más de 1 día) -->
+    {Object.keys(eventsByDay).length > 1 && (
+      <div class="mb-6">
+        <h3 class="text-center text-gray-400 text-sm mb-3">Filtrar por día:</h3>
+        <div class="flex flex-wrap justify-center gap-3">
+          <button 
+            class="day-filter-btn active bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow-green"
+            data-day="all"
+          >
+            📅 Todos los días
+          </button>
+          {Object.keys(eventsByDay).map((dayName) => (
+            <button 
+              class="day-filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow-green"
+              data-day={dayName}
+            >
+              📅 {dayName}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
+
+    <!-- Filtros por categoría (dinámicos) -->
+    <div class="flex flex-wrap justify-center gap-3 mb-4">
+      <button 
+        class="filter-btn active bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow"
+        data-category="all"
+      >
+        🏆 Todos
+      </button>
+      {categories.map((cat) => {
+        const categoryKey = cat as CategoryKey;
+        const category = categoryIcons[categoryKey] || categoryIcons.default;
+        return (
+          <button 
+            class={`filter-btn bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600/30 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${category.glow}`}
+            data-category={cat}
+          >
+            {category.icon} {cat}
+          </button>
+        );
+      })}
+    </div>
+
+    <!-- Contador de resultados -->
+    <div class="text-center text-gray-400 text-sm">
+      <span id="resultsCount">{totalEvents}</span> eventos encontrados
+    </div>
+  </div>
+
+  <!-- Estadísticas en tiempo real -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div class="hologram border border-blue-500/30 rounded-xl p-6 text-center glow">
+      <div class="text-3xl font-bold text-blue-400" id="totalEvents">{totalEvents}</div>
+      <div class="text-gray-400">Eventos Activos</div>
+    </div>
+    <div class="hologram border border-green-500/30 rounded-xl p-6 text-center glow-green">
+      <div class="text-3xl font-bold text-green-400">{Object.keys(eventsByDay).length}</div>
+      <div class="text-gray-400">Días Disponibles</div>
+    </div>
+    <div class="hologram border border-purple-500/30 rounded-xl p-6 text-center glow-purple">
+      <div class="text-3xl font-bold text-purple-400">HD</div>
+      <div class="text-gray-400">Calidad</div>
+    </div>
+  </div>
+
+  <!-- Eventos separados por días -->
+  {Object.entries(eventsByDay).map(([dayName, dayEvents]) => (
+    <div class="day-section mb-12" data-day={dayName}>
+      <!-- Header del día -->
+      <div class="flex items-center mb-6">
+        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+        <h2 class="mx-6 text-2xl font-bold text-blue-400 bg-gray-900 px-4 py-2 rounded-lg border border-blue-500/30">
+          📅 {dayName}
+        </h2>
+        <div class="flex-1 h-px bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+      </div>
+
+      <!-- Grid de eventos del día -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 events-grid" data-day={dayName}>
+        {dayEvents.map((event:any) => {
+          const categoryKey = event.category as CategoryKey;
+          const category = categoryIcons[categoryKey] || categoryIcons.default;
+          return (
+            <div 
+              class={`event-card hologram border border-gray-700/50 rounded-xl overflow-hidden hover:border-blue-500/50 transition-all duration-300 cursor-pointer transform hover:scale-105 ${category.glow} relative`}
+              data-channel-id={event.channelId}
+              data-category={event.category}
+              data-title={event.title.toLowerCase()}
+              data-time={event.time}
+              data-original-time={event.time}
+              data-day={dayName}
+            >
+              <!-- Header del evento -->
+              <div class={`bg-gradient-to-r ${category.color} p-4`}>
+                <div class="flex items-center justify-between">
+                  <span class="text-2xl">{category.icon}</span>
+                  <span class="text-xs font-semibold bg-black/30 px-2 py-1 rounded-full">
+                    {event.category || 'LIVE'}
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Contenido del evento -->
+              <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <span class="text-sm text-blue-400 font-semibold event-time">
+                    🕐 {event.time}
+                  </span>
+                  <span class="text-xs text-green-400 animate-pulse">
+                    ● EN VIVO
+                  </span>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-3 line-clamp-2">
+                  {event.title}
+                </h3>
+                
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-400">
+                    Canal: {event.channelId}
+                  </span>
+                  <button class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 glow">
+                    ▶ VER AHORA
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Efecto de hover -->
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  ))}
+
+  <!-- Mensaje cuando no hay resultados -->
+  <div id="noResults" class="hidden text-center py-12">
+    <div class="text-6xl mb-4">🔍</div>
+    <h3 class="text-2xl font-semibold text-gray-300 mb-2">No se encontraron eventos</h3>
+    <p class="text-gray-500">Intenta con otros términos de búsqueda o filtros</p>
+  </div>
+
+  <!-- Footer con información -->
+  <div class="text-center mt-16 text-gray-500">
+    <p class="text-sm">
+      🔒 Conexión segura • 🚫 Sin anuncios • ⚡ Carga instantánea
+    </p>
+  </div>
+</div>
+
+<script>
+  // Funcionalidad de búsqueda y filtros
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const eventCards = document.querySelectorAll('.event-card');
+    const daySections = document.querySelectorAll('.day-section');
+    const resultsCount = document.getElementById('resultsCount');
+    const totalEvents = document.getElementById('totalEvents');
+    const noResults = document.getElementById('noResults');
+    const timezoneSelect = document.getElementById('timezoneSelect') as HTMLSelectElement;
+    
+    let currentFilter = 'all';
+    let currentSearch = '';
+    let currentDay = 'all';
+    let currentTimezone = 'Europe/London';
+
+    // Detectar zona horaria del usuario automáticamente
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (timezoneSelect) {
+      // Buscar si la zona horaria del usuario está en las opciones
+      const options = Array.from(timezoneSelect.options);
+      const userOption = options.find(option => option.value === userTimezone);
+      if (userOption) {
+        timezoneSelect.value = userTimezone;
+        currentTimezone = userTimezone;
+      } else {
+        // Si no está, agregar la zona horaria del usuario
+        const option = document.createElement('option');
+        option.value = userTimezone;
+        option.textContent = `🌍 ${userTimezone.replace('_', ' ')}`;
+        timezoneSelect.appendChild(option);
+        timezoneSelect.value = userTimezone;
+        currentTimezone = userTimezone;
+      }
+    }
+
+    // Función para convertir horario GMT a zona horaria seleccionada
+    function convertTime(gmtTimeString: string, targetTimezone: string): string {
+      try {
+        // Crear fecha base (hoy) con la hora GMT
+        const today = new Date();
+        const [hours, minutes] = gmtTimeString.split(':').map(Number);
+        
+        // Crear fecha GMT
+        const gmtDate = new Date(Date.UTC(
+          today.getUTCFullYear(),
+          today.getUTCMonth(),
+          today.getUTCDate(),
+          hours,
+          minutes
+        ));
+        
+        // Convertir a zona horaria objetivo
+        const convertedTime = gmtDate.toLocaleTimeString('es-ES', {
+          timeZone: targetTimezone,
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        
+        return convertedTime;
+      } catch (error) {
+        console.error('Error converting time:', error);
+        return gmtTimeString; // Retornar hora original si hay error
+      }
+    }
+
+    // Función para actualizar todos los horarios
+    function updateAllTimes() {
+      eventCards.forEach(card => {
+        const htmlCard = card as HTMLElement;
+        const originalTime = htmlCard.getAttribute('data-original-time');
+        const timeElement = htmlCard.querySelector('.event-time');
+        
+        if (originalTime && timeElement) {
+          const convertedTime = convertTime(originalTime, currentTimezone);
+          timeElement.textContent = `🕐 ${convertedTime}`;
+          htmlCard.setAttribute('data-time', convertedTime);
+        }
+      });
+    }
+
+    // Event listener para cambio de zona horaria
+    if (timezoneSelect) {
+      timezoneSelect.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement;
+        if (target) {
+          currentTimezone = target.value;
+          updateAllTimes();
+        }
+      });
+    }
+
+    // Actualizar horarios al cargar la página
+    updateAllTimes();
+
+    // Función para filtrar eventos
+    function filterEvents() {
+      let visibleCount = 0;
+      let visibleDays = 0;
+      
+      daySections.forEach(daySection => {
+        const dayName = (daySection as HTMLElement).getAttribute('data-day') || '';
+        const dayCards = daySection.querySelectorAll('.event-card');
+        let dayVisibleCount = 0;
+        
+        // Verificar si el día debe mostrarse
+        const dayMatches = currentDay === 'all' || dayName === currentDay;
+        
+        if (dayMatches) {
+          dayCards.forEach(card => {
+            const htmlCard = card as HTMLElement;
+            const category = htmlCard.getAttribute('data-category') || '';
+            const title = htmlCard.getAttribute('data-title') || '';
+            const time = htmlCard.getAttribute('data-time') || '';
+            
+            const matchesFilter = currentFilter === 'all' || category === currentFilter;
+            const matchesSearch = currentSearch === '' || 
+              title.includes(currentSearch.toLowerCase()) || 
+              time.includes(currentSearch) ||
+              category.toLowerCase().includes(currentSearch.toLowerCase());
+            
+            if (matchesFilter && matchesSearch) {
+              htmlCard.style.display = 'block';
+              visibleCount++;
+              dayVisibleCount++;
+            } else {
+              htmlCard.style.display = 'none';
+            }
+          });
+        } else {
+          // Ocultar todas las tarjetas del día si no coincide con el filtro de día
+          dayCards.forEach(card => {
+            (card as HTMLElement).style.display = 'none';
+          });
+        }
+        
+        // Mostrar/ocultar sección del día
+        if (dayVisibleCount > 0 && dayMatches) {
+          (daySection as HTMLElement).style.display = 'block';
+          visibleDays++;
+        } else {
+          (daySection as HTMLElement).style.display = 'none';
+        }
+      });
+      
+      // Actualizar contador
+      if (resultsCount) resultsCount.textContent = visibleCount.toString();
+      if (totalEvents) totalEvents.textContent = visibleCount.toString();
+      
+      // Mostrar/ocultar mensaje de no resultados
+      if (visibleCount === 0) {
+        if (noResults) noResults.classList.remove('hidden');
+      } else {
+        if (noResults) noResults.classList.add('hidden');
+      }
+    }
+
+    // Event listener para búsqueda
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const target = e.target as HTMLInputElement;
+        if (target) {
+          currentSearch = target.value;
+          filterEvents();
+        }
+      });
+    }
+
+    // Event listeners para filtros de día
+    const dayFilterBtns = document.querySelectorAll('.day-filter-btn');
+    dayFilterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remover clase active de todos los botones de día
+        dayFilterBtns.forEach(b => {
+          b.classList.remove('active', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+          b.classList.add('bg-gray-700/50');
+        });
+        
+        // Agregar clase active al botón clickeado
+        btn.classList.add('active', 'bg-gradient-to-r', 'from-green-500', 'to-emerald-600');
+        btn.classList.remove('bg-gray-700/50');
+        
+        currentDay = btn.getAttribute('data-day') || 'all';
+        filterEvents();
+      });
+    });
+
+    // Event listeners para filtros de categoría
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remover clase active de todos los botones
+        filterBtns.forEach(b => {
+          b.classList.remove('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+          b.classList.add('bg-gray-700/50');
+        });
+        
+        // Agregar clase active al botón clickeado
+        btn.classList.add('active', 'bg-gradient-to-r', 'from-blue-500', 'to-purple-600');
+        btn.classList.remove('bg-gray-700/50');
+        
+        currentFilter = btn.getAttribute('data-category') || 'all';
+        filterEvents();
+      });
+    });
+
+    // Funcionalidad de click en eventos
+    eventCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const channelId = (card as HTMLElement).getAttribute('data-channel-id');
+        if (channelId) {
+          if (typeof window !== 'undefined' && (window as any).electronAPI) {
+            // Para Electron
+            (window as any).electronAPI.loadStream(channelId);
+          } else {
+            // Para web (desarrollo)
+            console.log('Cargando canal:', channelId);
+          }
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .day-filter-btn.active {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+  }
+  
+  .filter-btn.active {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  
+  .glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  
+  .glow-green {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 20px rgba(147, 51, 234, 0.3);
+  }
+  
+  .hologram {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(10px);
+  }
+</style>
